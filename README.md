@@ -75,7 +75,7 @@ O PhantOS implementa isolamento por air-gap: chaves privadas **nunca saem** do d
 | Zeroização garantida | `zero_bytearray()` em bloco `finally` |
 | Gate de assinatura | Bloqueia se qualquer interface de rede estiver ativa |
 | Redação de logs | `safe_event()` remove termos sensíveis de todos os logs |
-| Patch embit v0.8.0 | 40+ vulnerabilidades corrigidas (A-01 a A-09, CRYPTO-01 a CRYPTO-09) |
+| Patch embit v0.8.0 | 40+ vulnerabilidades corrigidas (A-01 a A-09, CRYPTO-01 a CRYPTO-09) — aplicado automaticamente pelo `build_iso.sh` durante o build da ISO |
 | SO endurecido | swap off, core dumps off, sysctl hardening, `/tmp` em tmpfs |
 
 ---
