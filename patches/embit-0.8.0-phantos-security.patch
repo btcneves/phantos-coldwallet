@@ -1,0 +1,1341 @@
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/bip32.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/bip32.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/bip32.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/bip32.py"	2026-05-16 21:23:05.060672472 -0300
+@@ -191,6 +191,9 @@ class HDKey(EmbitKey):
+             hardened = True
+         if hardened and not self.is_private:
+             raise HDError("Can't do hardened with public key")
++        # B-02: depth overflow silencioso
++        if self.depth >= 255:
++            raise HDError("Profundidade de derivação máxima atingida (255)")
+ 
+         # we need pubkey for fingerprint anyways
+         sec = self.sec()
+@@ -203,7 +206,10 @@ class HDKey(EmbitKey):
+         secret = raw[:32]
+         chain_code = raw[32:]
+         if self.is_private:
+-            secret = secp256k1.ec_privkey_add(secret, self.key.serialize())
++            try:
++                secret = secp256k1.ec_privkey_add(secret, self.key.serialize())
++            except ValueError:
++                raise HDError("Invalid child key at this index (IL >= ORDER or result = 0); try index+1")
+             key = ec.PrivateKey(secret)
+         else:
+             # copy of internal secp256k1 point structure
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/bip39.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/bip39.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/bip39.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/bip39.py"	2026-05-16 21:23:15.086490932 -0300
+@@ -6,6 +6,9 @@ from .wordlists.bip39 import WORDLIST
+ 
+ PBKDF2_ROUNDS = const(2048)
+ 
++# M-10: pré-computado para lookup O(1) em tempo aproximadamente constante
++_WORDLIST_INDEX = {word: i for i, word in enumerate(WORDLIST)}
++
+ 
+ def mnemonic_to_bytes(mnemonic: str, ignore_checksum: bool = False, wordlist=WORDLIST):
+     # this function is copied from Jimmy Song's HDPrivateKey.from_mnemonic() method
+@@ -17,9 +20,16 @@ def mnemonic_to_bytes(mnemonic: str, ign
+     binary_seed = bytearray()
+     offset = 0
+     for word in words:
+-        if word not in wordlist:
+-            raise ValueError("Word '%s' is not in the dictionary" % word)
+-        index = wordlist.index(word)
++        if wordlist is WORDLIST:
++            # M-10: lookup O(1) via dicionário pré-computado para evitar timing side-channel
++            index = _WORDLIST_INDEX.get(word, -1)
++            if index == -1:
++                raise ValueError("Word '%s' is not in the dictionary" % word)
++        else:
++            idx_map = {w: i for i, w in enumerate(wordlist)}
++            index = idx_map.get(word, -1)
++            if index == -1:
++                raise ValueError("Word '%s' is not in the dictionary" % word)
+         remaining = 11
+         while remaining > 0:
+             bits_needed = 8 - offset
+@@ -57,7 +67,8 @@ def mnemonic_to_bytes(mnemonic: str, ign
+     computed_checksum = bytearray(hashlib.sha256(data).digest()[:checksum_length])
+ 
+     # ignore the last bits_to_ignore bits
+-    computed_checksum[-1] &= 256 - (1 << (bits_to_ignore + 1) - 1)
++    mask = 0xFF ^ ((1 << bits_to_ignore) - 1)
++    computed_checksum[-1] &= mask
+     if not ignore_checksum and checksum != bytes(computed_checksum):
+         raise ValueError("Checksum verification failed")
+     return data
+@@ -78,6 +89,15 @@ def mnemonic_to_seed(mnemonic: str, pass
+     # If wordlist is None - don't check mnemonic.
+     if wordlist is not None:
+         mnemonic_to_bytes(mnemonic, wordlist=wordlist)
++    else:
++        # M-11: avisar que a validação da mnemônica está desativada
++        import warnings
++        warnings.warn(
++            "mnemonic_to_seed chamado com wordlist=None — validação da mnemônica desativada. "
++            "Apenas use em contextos não-Bitcoin (ex: SLIP-39).",
++            UserWarning,
++            stacklevel=2,
++        )
+     return hashlib.pbkdf2_hmac(
+         "sha512",
+         mnemonic.encode("utf-8"),
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/bip85.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/bip85.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/bip85.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/bip85.py"	2026-05-16 16:17:59.581578225 -0300
+@@ -17,7 +17,13 @@ def derive_entropy(root, app_index, path
+     """
+     Derive app-specific bip85 entropy using path m/83696968'/app_index'/...path'
+     """
+-    assert max(path) < HARDENED_INDEX
++    if not path:
++        raise ValueError("BIP-85: path não pode ser vazio")
++    if max(path) >= HARDENED_INDEX:
++        raise ValueError(
++            f"BIP-85: todos os índices do path devem ser < HARDENED_INDEX (0x80000000). "
++            f"Índice inválido: {max(path):#010x}"
++        )
+     derivation = [HARDENED_INDEX + 83696968, HARDENED_INDEX + app_index] + [
+         p + HARDENED_INDEX for p in path
+     ]
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/compact.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/compact.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/compact.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/compact.py"	2026-05-16 16:17:22.119491481 -0300
+@@ -26,7 +26,7 @@ def from_bytes(b: bytes) -> int:
+     return res
+ 
+ 
+-def read_from(stream) -> int:
++def read_from(stream, max_value=None) -> int:
+     """reads a compact integer from a stream"""
+     c = stream.read(1)
+     if not isinstance(c, bytes):
+@@ -36,6 +36,11 @@ def read_from(stream) -> int:
+     i = c[0]
+     if i >= 0xFD:
+         bytes_to_read = 2 ** (i - 0xFC)
+-        return int.from_bytes(stream.read(bytes_to_read), "little")
++        result = int.from_bytes(stream.read(bytes_to_read), "little")
+     else:
+-        return i
++        result = i
++    if max_value is not None and result > max_value:
++        raise ValueError(
++            "Varint {} excede limite máximo {}".format(result, max_value)
++        )
++    return result
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/arguments.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/arguments.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/arguments.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/arguments.py"	2026-05-16 21:00:13.340174339 -0300
+@@ -281,6 +281,13 @@ class Key(DescriptorBase):
+             # bip32 key
+             return bip32.HDKey.from_base58(k), False
+         else:
++            import warnings
++            warnings.warn(
++                "Descriptor contém chave privada WIF. "
++                "Evite incluir chaves privadas em descriptors — use apenas xpub/pubkey.",
++                UserWarning,
++                stacklevel=3,
++            )
+             return ec.PrivateKey.from_wif(k), False
+ 
+     @property
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/checksum.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/checksum.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/checksum.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/checksum.py"	2026-05-16 16:18:24.470480714 -0300
+@@ -52,5 +52,13 @@ def checksum(desc: str) -> str:
+ def add_checksum(desc: str) -> str:
+     """Add checksum to descriptor string"""
+     if "#" in desc:
+-        desc = desc.split("#")[0]
++        desc_part, existing_checksum = desc.split("#", 1)
++        # B-05: verificar se o checksum existente é válido antes de substituir
++        expected = checksum(desc_part)
++        if existing_checksum != expected:
++            raise DescriptorError(
++                f"Checksum existente inválido: '{existing_checksum}' (esperado '{expected}'). "
++                "O descriptor pode estar corrompido."
++            )
++        return desc  # já tem checksum válido
+     return desc + "#" + checksum(desc)
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/descriptor.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/descriptor.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/descriptor.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/descriptor.py"	2026-05-16 16:18:17.948981419 -0300
+@@ -284,11 +284,28 @@ class Descriptor(DescriptorBase):
+ 
+     @classmethod
+     def from_string(cls, desc):
+-        s = BytesIO(desc.encode())
++        # M-08: separar e verificar checksum antes do parse
++        checksum_provided = None
++        if "#" in desc:
++            desc_without_checksum, checksum_provided = desc.split("#", 1)
++        else:
++            desc_without_checksum = desc
++
++        s = BytesIO(desc_without_checksum.encode())
+         res = cls.read_from(s)
+         left = s.read()
+-        if len(left) > 0 and not left.startswith(b"#"):
++        if len(left) > 0:
+             raise DescriptorError("Unexpected characters after descriptor: %r" % left)
++
++        # Verificar checksum se fornecido
++        if checksum_provided is not None:
++            from .checksum import checksum as calc_checksum
++            expected = calc_checksum(desc_without_checksum)
++            if checksum_provided != expected:
++                raise DescriptorError(
++                    f"Checksum de descriptor inválido: fornecido '{checksum_provided}', "
++                    f"esperado '{expected}'"
++                )
+         return res
+ 
+     @classmethod
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/miniscript.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/miniscript.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/miniscript.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/miniscript.py"	2026-05-16 21:00:07.276963149 -0300
+@@ -1,8 +1,10 @@
+ from ..misc import read_until
+-from .errors import MiniscriptError
++from .errors import MiniscriptError, DescriptorError
+ from .base import DescriptorBase
+ from .arguments import Key, KeyHash, Number, Raw32, Raw20
+ 
++MAX_MINISCRIPT_DEPTH = 100
++
+ 
+ class Miniscript(DescriptorBase):
+     def __init__(self, *args, **kwargs):
+@@ -53,7 +55,12 @@ class Miniscript(DescriptorBase):
+         return self.TYPE
+ 
+     @classmethod
+-    def read_from(cls, s, taproot=False):
++    def read_from(cls, s, taproot=False, _depth=0):
++        # M-09: limite de profundidade de aninhamento para evitar DoS por recursão
++        if _depth > MAX_MINISCRIPT_DEPTH:
++            raise DescriptorError(
++                f"Miniscript excede profundidade máxima de aninhamento ({MAX_MINISCRIPT_DEPTH})"
++            )
+         op, char = read_until(s, b"(")
+         op = op.decode()
+         wrappers = ""
+@@ -65,7 +72,7 @@ class Miniscript(DescriptorBase):
+             raise MiniscriptError("Unknown operator '%s'" % op)
+         # number of arguments, classes of args, compile fn, type, validity checker
+         MiniscriptCls = OPERATORS[OPERATOR_NAMES.index(op)]
+-        args = MiniscriptCls.read_arguments(s, taproot=taproot)
++        args = MiniscriptCls.read_arguments(s, taproot=taproot, _depth=_depth + 1)
+         miniscript = MiniscriptCls(*args, taproot=taproot)
+         for w in reversed(wrappers):
+             if w not in WRAPPER_NAMES:
+@@ -75,18 +82,25 @@ class Miniscript(DescriptorBase):
+         return miniscript
+ 
+     @classmethod
+-    def read_arguments(cls, s, taproot=False):
++    def read_arguments(cls, s, taproot=False, _depth=0):
+         args = []
+         if cls.NARGS is None:
+             if type(cls.ARGCLS) == tuple:
+                 firstcls, nextcls = cls.ARGCLS
+             else:
+                 firstcls, nextcls = cls.ARGCLS, cls.ARGCLS
+-            args.append(firstcls.read_from(s, taproot=taproot))
++            # Propagar _depth apenas para subclasses de Miniscript
++            first_kwargs = {"taproot": taproot}
++            if issubclass(firstcls, Miniscript):
++                first_kwargs["_depth"] = _depth
++            args.append(firstcls.read_from(s, **first_kwargs))
+             while True:
+                 char = s.read(1)
+                 if char == b",":
+-                    args.append(nextcls.read_from(s, taproot=taproot))
++                    next_kwargs = {"taproot": taproot}
++                    if issubclass(nextcls, Miniscript):
++                        next_kwargs["_depth"] = _depth
++                    args.append(nextcls.read_from(s, **next_kwargs))
+                 elif char == b")":
+                     break
+                 else:
+@@ -95,7 +109,10 @@ class Miniscript(DescriptorBase):
+                     )
+         else:
+             for i in range(cls.NARGS):
+-                args.append(cls.ARGCLS.read_from(s, taproot=taproot))
++                arg_kwargs = {"taproot": taproot}
++                if issubclass(cls.ARGCLS, Miniscript):
++                    arg_kwargs["_depth"] = _depth
++                args.append(cls.ARGCLS.read_from(s, **arg_kwargs))
+                 if i < cls.NARGS - 1:
+                     char = s.read(1)
+                     if char != b",":
+@@ -582,6 +599,20 @@ class Thresh(Miniscript):
+     ARGCLS = (Number, Miniscript)
+     TYPE = "B"
+ 
++    def __init__(self, *args, **kwargs):
++        super().__init__(*args, **kwargs)
++        if self.args:
++            m = self.args[0].num
++            n = len(self.args) - 1
++            if m < 1:
++                raise MiniscriptError(
++                    "thresh: Threshold deve ser >= 1, got %d" % m
++                )
++            if n > 0 and m > n:
++                raise MiniscriptError(
++                    "thresh: Threshold %d excede número de sub-expressões %d" % (m, n)
++                )
++
+     def inner_compile(self):
+         return (
+             self.args[1].compile()
+@@ -643,6 +674,17 @@ class Multi(Miniscript):
+             raise MiniscriptError(
+                 "%s can't be used if taproot is %s" % (self.NAME, self.taproot)
+             )
++        if self.args:
++            m = self.args[0].num
++            n = len(self.args) - 1
++            if m < 1:
++                raise MiniscriptError(
++                    "%s: Threshold deve ser >= 1, got %d" % (self.NAME, m)
++                )
++            if n > 0 and m > n:
++                raise MiniscriptError(
++                    "%s: Threshold %d excede número de chaves %d" % (self.NAME, m, n)
++                )
+ 
+     def inner_compile(self):
+         return (
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/taptree.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/taptree.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/descriptor/taptree.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/descriptor/taptree.py"	2026-05-16 20:59:11.847539938 -0300
+@@ -1,12 +1,20 @@
+-from .errors import MiniscriptError
++from .errors import MiniscriptError, DescriptorError
+ from .base import DescriptorBase
+ from .miniscript import Miniscript
+ from ..hashes import tagged_hash
+ from ..script import Script
+ 
++MAX_TAPTREE_DEPTH = 128  # BIP-341: maximum script path depth
++VALID_TAPLEAF_VERSIONS = {0xC0}  # BIP-341: only version 0xC0 currently defined
++
+ 
+ class TapLeaf(DescriptorBase):
+     def __init__(self, miniscript=None, version=0xC0):
++        if version not in VALID_TAPLEAF_VERSIONS:
++            raise DescriptorError(
++                f"Leaf version {version:#04x} inválida. "
++                f"Versões válidas: {[hex(v) for v in VALID_TAPLEAF_VERSIONS]}"
++            )
+         self.miniscript = miniscript
+         self.version = version
+ 
+@@ -97,18 +105,22 @@ class TapTree(DescriptorBase):
+         return left.keys + right.keys
+ 
+     @classmethod
+-    def read_from(cls, s):
++    def read_from(cls, s, _depth=0):
++        if _depth >= MAX_TAPTREE_DEPTH:
++            raise DescriptorError(
++                f"TapTree excede profundidade máxima BIP-341 ({MAX_TAPTREE_DEPTH} níveis)"
++            )
+         c = s.read(1)
+         if len(c) == 0:
+             return cls()
+         if c == b"{":  # more than one miniscript
+-            left = cls.read_from(s)
++            left = cls.read_from(s, _depth=_depth + 1)
+             c = s.read(1)
+             if c == b"}":
+                 return left
+             if c != b",":
+                 raise MiniscriptError("Invalid taptree syntax: expected ','")
+-            right = cls.read_from(s)
++            right = cls.read_from(s, _depth=_depth + 1)
+             if s.read(1) != b"}":
+                 raise MiniscriptError("Invalid taptree syntax: expected '}'")
+             return cls((left, right))
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/ec.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/ec.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/ec.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/ec.py"	2026-05-16 20:58:55.587504623 -0300
+@@ -230,7 +230,9 @@ class PrivateKey(EmbitKey):
+         return sig
+ 
+     def schnorr_sign(self, msg_hash) -> SchnorrSig:
+-        return SchnorrSig(secp256k1.schnorrsig_sign(msg_hash, self._secret))
++        import os
++        aux_rand = os.urandom(32)
++        return SchnorrSig(secp256k1.schnorrsig_sign(msg_hash, self._secret, extra_data=aux_rand))
+ 
+     def verify(self, sig, msg_hash) -> bool:
+         return self.get_public_key().verify(sig, msg_hash)
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/finalizer.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/finalizer.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/finalizer.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/finalizer.py"	2026-05-16 20:58:17.249027923 -0300
+@@ -1,6 +1,7 @@
+ from . import ec
+ from .script import Witness, Script
+ from .transaction import Transaction
++from .hashes import hash160
+ 
+ 
+ def parse_multisig(sc):
+@@ -49,19 +50,48 @@ def finalize_psbt(psbt, ignore_missing=F
+         if psbt.utxo(i).script_pubkey.script_type() == "p2pkh":
+             if not psbt.inputs[i].partial_sigs:
+                 continue
+-            d = b""
+-            # meh, ugly, doesn't check pubkeys
+-            for k in psbt.inputs[i].partial_sigs:
+-                v = psbt.inputs[i].partial_sigs[k]
+-                d += bytes([len(v)]) + v + bytes([len(k.sec())]) + k.sec()
++            if len(psbt.inputs[i].partial_sigs) != 1:
++                continue
++            pubkey, sig = next(iter(psbt.inputs[i].partial_sigs.items()))
++            # OP_DUP OP_HASH160 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG
++            expected_hash160 = psbt.utxo(i).script_pubkey.data[3:23]
++            if hash160(pubkey.sec()) != expected_hash160:
++                continue
++            pub_bytes = pubkey.sec()
++            d = bytes([len(sig)]) + sig + bytes([len(pub_bytes)]) + pub_bytes
+             ttx.vin[i].script_sig = Script(d)
+             done += 1
+             continue
+ 
+-        if psbt.inputs[i].redeem_script is not None:
+-            ttx.vin[i].script_sig = Script(psbt.inputs[i].redeem_script.serialize())
++        # if P2SH (pure, not P2SH-P2WSH)
++        if psbt.inputs[i].redeem_script is not None and psbt.inputs[i].witness_script is None:
++            sc_type = psbt.utxo(i).script_pubkey.script_type()
++            if sc_type == "p2sh":
++                # For P2SH multisig: build scriptSig with sigs then push redeem_script
++                redeem = psbt.inputs[i].redeem_script
++                try:
++                    m, pubs = parse_multisig(redeem)
++                except RuntimeError:
++                    continue
++                sigs = []
++                for pub in pubs:
++                    if pub in psbt.inputs[i].partial_sigs:
++                        sigs.append(psbt.inputs[i].partial_sigs[pub])
++                    if len(sigs) == m:
++                        break
++                if len(sigs) < m and not ignore_missing:
++                    continue
++                redeem_bytes = redeem.serialize()
++                # OP_0 <sig1> ... <sigm> <redeem_script>
++                d = b"\x00"
++                for s in sigs:
++                    d += bytes([len(s)]) + s
++                d += bytes([len(redeem_bytes)]) + redeem_bytes
++                ttx.vin[i].script_sig = Script(d)
++                done += 1
++            continue
+ 
+-        # if multisig
++        # if multisig (P2WSH or P2SH-P2WSH)
+         if psbt.inputs[i].witness_script is not None:
+             m, pubs = parse_multisig(psbt.inputs[i].witness_script)
+             sigs = []
+@@ -74,17 +104,21 @@ def finalize_psbt(psbt, ignore_missing=F
+                 inp.witness = Witness(
+                     [b""] + sigs + [psbt.inputs[i].witness_script.data]
+                 )
++                # For P2SH-P2WSH: scriptSig must push the redeem_script (witness_program)
++                if psbt.inputs[i].redeem_script is not None:
++                    rs_bytes = psbt.inputs[i].redeem_script.serialize()
++                    ttx.vin[i].script_sig = Script(bytes([len(rs_bytes)]) + rs_bytes)
+                 done += 1
+             continue
+ 
+-        # meh, ugly, doesn't check pubkeys
+-        for k in psbt.inputs[i].partial_sigs:
+-            v = psbt.inputs[i].partial_sigs[k]
++        # P2WPKH fallback
++        if len(psbt.inputs[i].partial_sigs) != 1:
++            continue
++        for k, v in psbt.inputs[i].partial_sigs.items():
+             arr = [v, k.sec()]
+-            # if psbt.inputs[i].redeem_script:
+-            #     arr = [psbt.inputs[i].redeem_script.data] + arr
+             inp.witness = Witness(arr)
+-            done += 1
++            break
++        done += 1
+ 
+         # TODO: legacy multisig
+     if not ignore_missing and done < len(ttx.vin):
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/liquid/addresses.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/liquid/addresses.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/liquid/addresses.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/liquid/addresses.py"	2026-05-16 20:59:46.299140498 -0300
+@@ -42,9 +42,18 @@ def addr_decode(addr):
+         addr = addr.lower()
+         hrp = addr.split("1")[0]
+         ver, data = blech32.decode(hrp, addr)
++        if ver is None or data is None:
++            raise ValueError(f"Endereço Liquid inválido: {addr!r}")
+         data = bytes(data)
++        if len(data) < 33:
++            raise ValueError(f"Dados de endereço Liquid muito curtos: {len(data)} bytes")
+         pub = ec.PublicKey.parse(data[:33])
+         pubhash = data[33:]
++        if len(pubhash) not in (20, 32):
++            raise ValueError(
++                f"Witness program de comprimento inválido: {len(pubhash)} bytes "
++                "(esperado 20 para P2WPKH ou 32 para P2WSH)"
++            )
+         sc = script.Script(b"\x00" + bytes([len(pubhash)]) + pubhash)
+     elif addr.split("1")[0].lower() in [net.get("bech32") for net in NETWORKS.values()]:
+         hrp = addr.split("1")[0]
+@@ -88,4 +97,6 @@ def to_unconfidential(addr):
+     if pub is None:
+         return addr
+     net = detect_network(addr)
++    if net is None:
++        raise ValueError(f"Rede não reconhecida para endereço: {addr!r}")
+     return address(sc, network=net)
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/liquid/blech32.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/liquid/blech32.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/liquid/blech32.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/liquid/blech32.py"	2026-05-16 20:59:53.239946393 -0300
+@@ -115,12 +115,12 @@ def decode(hrp, addr):
+     if hrpgot != hrp:
+         return (None, None)
+     decoded = convertbits(data[1:], 5, 8, False)
+-    # if decoded is None or len(decoded) < 2 or len(decoded) > 40:
+-    #     return (None, None)
+-    # if data[0] > 16:
+-    #     return (None, None)
+-    # if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
+-    #     return (None, None)
++    if decoded is None or len(decoded) < 2 or len(decoded) > 40:
++        return (None, None)
++    if data[0] > 16:
++        return (None, None)
++    if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
++        return (None, None)
+     return (data[0], decoded)
+ 
+ 
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/liquid/pset.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/liquid/pset.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/liquid/pset.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/liquid/pset.py"	2026-05-16 20:59:29.005239170 -0300
+@@ -91,14 +91,17 @@ class LInputScope(InputScope):
+                 self.utxo.asset,
+                 self.utxo.script_pubkey,
+             )
+-        # failed to unblind
+-        except:
++        except Exception as e:
++            import warnings
++            warnings.warn(f"Falha ao unblind input: {e}", UserWarning)
+             return
+         # verify
+         gen = secp256k1.generator_generate_blinded(asset, in_abf)
+-        assert gen == secp256k1.generator_parse(self.utxo.asset)
++        if gen != secp256k1.generator_parse(self.utxo.asset):
++            raise PSBTError("Asset commitment não corresponde ao asset declarado")
+         cmt = secp256k1.pedersen_commit(vbf, value, gen)
+-        assert cmt == secp256k1.pedersen_commitment_parse(self.utxo.value)
++        if cmt != secp256k1.pedersen_commitment_parse(self.utxo.value):
++            raise PSBTError("Value commitment não corresponde ao valor declarado")
+ 
+         self.asset = asset
+         self.value = value
+@@ -163,28 +166,52 @@ class LInputScope(InputScope):
+             v = read_string(stream)
+             # liquid-specific fields
+             if k == b"\xfc\x08elements\x00":
++                if self.value is not None:
++                    raise PSBTError("Duplicated Liquid field: value")
+                 self.value = int.from_bytes(v, "little")
+             elif k == b"\xfc\x08elements\x01":
++                if self.value_blinding_factor is not None:
++                    raise PSBTError("Duplicated Liquid field: value_blinding_factor")
+                 self.value_blinding_factor = v
+             elif k == b"\xfc\x08elements\x02":
++                if self.asset is not None:
++                    raise PSBTError("Duplicated Liquid field: asset")
+                 self.asset = v
+             elif k == b"\xfc\x08elements\x03":
++                if self.asset_blinding_factor is not None:
++                    raise PSBTError("Duplicated Liquid field: asset_blinding_factor")
+                 self.asset_blinding_factor = v
+             elif k == b"\xfc\x04pset\x00":
++                if self.issue_value is not None:
++                    raise PSBTError("Duplicated Liquid field: issue_value")
+                 self.issue_value = int.from_bytes(v, "little")
+             elif k == b"\xfc\x04pset\x01":
++                if self.issue_commitment is not None:
++                    raise PSBTError("Duplicated Liquid field: issue_commitment")
+                 self.issue_commitment = v
+             elif k == b"\xfc\x04pset\x0f":
++                if self.issue_proof is not None:
++                    raise PSBTError("Duplicated Liquid field: issue_proof")
+                 self.issue_proof = v
+             elif k == b"\xfc\x04pset\x0a":
++                if self.token_value is not None:
++                    raise PSBTError("Duplicated Liquid field: token_value")
+                 self.token_value = int.from_bytes(v, "little")
+             elif k == b"\xfc\x04pset\x0b":
++                if self.token_commitment is not None:
++                    raise PSBTError("Duplicated Liquid field: token_commitment")
+                 self.token_commitment = v
+             elif k == b"\xfc\x04pset\x0c":
++                if self.issue_nonce is not None:
++                    raise PSBTError("Duplicated Liquid field: issue_nonce")
+                 self.issue_nonce = v
+             elif k == b"\xfc\x04pset\x0d":
++                if self.issue_entropy is not None:
++                    raise PSBTError("Duplicated Liquid field: issue_entropy")
+                 self.issue_entropy = v
+             elif k == b"\xfc\x04pset\x10":
++                if self.token_proof is not None:
++                    raise PSBTError("Duplicated Liquid field: token_proof")
+                 self.token_proof = v
+             else:
+                 self.unknown[k] = v
+@@ -403,24 +430,44 @@ class LOutputScope(OutputScope):
+             v = read_string(stream)
+             # liquid-specific fields
+             if k in [b"\xfc\x08elements\x00", b"\xfc\x04pset\x01"]:
++                if self.value_commitment is not None:
++                    raise PSBTError("Duplicated Liquid field: value_commitment")
+                 self.value_commitment = v
+             elif k == b"\xfc\x08elements\x01":
++                if self.value_blinding_factor is not None:
++                    raise PSBTError("Duplicated Liquid field: value_blinding_factor")
+                 self.value_blinding_factor = v
+             elif k == b"\xfc\x04pset\x02":
++                if self.asset is not None:
++                    raise PSBTError("Duplicated Liquid field: asset")
+                 self.asset = v
+             elif k in [b"\xfc\x08elements\x02", b"\xfc\x04pset\x03"]:
++                if self.asset_commitment is not None:
++                    raise PSBTError("Duplicated Liquid field: asset_commitment")
+                 self.asset_commitment = v
+             elif k == b"\xfc\x08elements\x03":
++                if self.asset_blinding_factor is not None:
++                    raise PSBTError("Duplicated Liquid field: asset_blinding_factor")
+                 self.asset_blinding_factor = v
+             elif k in [b"\xfc\x08elements\x06", b"\xfc\x04pset\x06"]:
++                if self.blinding_pubkey is not None:
++                    raise PSBTError("Duplicated Liquid field: blinding_pubkey")
+                 self.blinding_pubkey = v
+             elif k in [b"\xfc\x08elements\x07", b"\xfc\x04pset\x07"]:
++                if self.ecdh_pubkey is not None:
++                    raise PSBTError("Duplicated Liquid field: ecdh_pubkey")
+                 self.ecdh_pubkey = v
+             elif k == b"\xfc\x04pset\x08":
++                if self.blinder_index is not None:
++                    raise PSBTError("Duplicated Liquid field: blinder_index")
+                 self.blinder_index = int.from_bytes(v, "little")
+             elif k == b"\xfc\x04pset\x09":
++                if self.value_proof is not None:
++                    raise PSBTError("Duplicated Liquid field: value_proof")
+                 self.value_proof = v
+             elif k == b"\xfc\x04pset\x0a":
++                if self.asset_proof is not None:
++                    raise PSBTError("Duplicated Liquid field: asset_proof")
+                 self.asset_proof = v
+             else:
+                 self.unknown[k] = v
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/liquid/transaction.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/liquid/transaction.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/liquid/transaction.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/liquid/transaction.py"	2026-05-16 20:58:44.697061821 -0300
+@@ -40,16 +40,19 @@ class LTransactionError(TransactionError
+ 
+ def read_commitment(stream):
+     c = stream.read(1)
+-    assert len(c) == 1
++    if len(c) != 1:
++        raise TransactionError("campo truncado: esperado 1 byte, lido 0")
+     if c == b"\x00":  # None
+         return None
+     if c == b"\x01":  # unconfidential
+         r = stream.read(8)
+-        assert len(r) == 8
++        if len(r) != 8:
++            raise TransactionError(f"campo truncado: esperado 8 bytes, lido {len(r)}")
+         return int.from_bytes(r, "big")
+     # confidential
+     r = stream.read(32)
+-    assert len(r) == 32
++    if len(r) != 32:
++        raise TransactionError(f"campo truncado: esperado 32 bytes, lido {len(r)}")
+     return c + r
+ 
+ 
+@@ -71,10 +74,14 @@ def unblind(
+     message_length=64,
+ ) -> tuple:
+     """Unblinds a range proof and returns value, asset, value blinding factor, asset blinding factor, extra data, min and max values"""
+-    assert len(pubkey) in [33, 65]
+-    assert len(blinding_key) == 32
+-    assert len(value_commitment) == 33
+-    assert len(asset_commitment) == 33
++    if len(pubkey) not in [33, 65]:
++        raise ValueError(f"pubkey deve ter 33 ou 65 bytes, recebido {len(pubkey)}")
++    if len(blinding_key) != 32:
++        raise ValueError(f"blinding_key deve ter 32 bytes, recebido {len(blinding_key)}")
++    if len(value_commitment) != 33:
++        raise ValueError(f"value_commitment deve ter 33 bytes, recebido {len(value_commitment)}")
++    if len(asset_commitment) != 33:
++        raise ValueError(f"asset_commitment deve ter 33 bytes, recebido {len(asset_commitment)}")
+     pub = secp256k1.ec_pubkey_parse(pubkey)
+     secp256k1.ec_pubkey_tweak_mul(pub, blinding_key)
+     sec = secp256k1.ec_pubkey_serialize(pub)
+@@ -397,9 +404,11 @@ class AssetIssuance(EmbitBase):
+     @classmethod
+     def read_from(cls, stream):
+         nonce = stream.read(32)
+-        assert len(nonce) == 32
++        if len(nonce) != 32:
++            raise TransactionError(f"campo truncado: esperado 32 bytes, lido {len(nonce)}")
+         entropy = stream.read(32)
+-        assert len(entropy) == 32
++        if len(entropy) != 32:
++            raise TransactionError(f"campo truncado: esperado 32 bytes, lido {len(entropy)}")
+         amount_commitment = read_commitment(stream)
+         token_commitment = read_commitment(stream)
+         return cls(nonce, entropy, amount_commitment, token_commitment)
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/psbt.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/psbt.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/psbt.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/psbt.py"	2026-05-16 20:58:40.356621079 -0300
+@@ -219,7 +219,8 @@ class InputScope(PSBTScope):
+ 
+     @property
+     def is_taproot(self):
+-        return self.utxo.script_pubkey.script_type() == "p2tr"
++        utxo = self.utxo
++        return utxo is not None and utxo.script_pubkey.script_type() == "p2tr"
+ 
+     def verify(self, ignore_missing=False):
+         """Verifies the hash of previous transaction provided in non_witness_utxo.
+@@ -255,13 +256,21 @@ class InputScope(PSBTScope):
+                 raise PSBTError("Duplicated utxo value")
+             else:
+                 l = compact.read_from(stream)
++                tx_bytes = stream.read(l)
++                if len(tx_bytes) != l:
++                    raise PSBTError(
++                        "non_witness_utxo truncado: esperado {} bytes, lido {}".format(
++                            l, len(tx_bytes)
++                        )
++                    )
++                tx_stream = BytesIO(tx_bytes)
+                 # we verified and saved utxo
+                 if self.compress and self.txid and self.vout is not None:
+-                    txout, txhash = self.TX_CLS.read_vout(stream, self.vout)
++                    txout, txhash = self.TX_CLS.read_vout(tx_stream, self.vout)
+                     self._txhash = txhash
+                     self._utxo = txout
+                 else:
+-                    tx = self.TX_CLS.read_from(stream)
++                    tx = self.TX_CLS.read_from(tx_stream)
+                     self.non_witness_utxo = tx
+             return
+ 
+@@ -292,7 +301,13 @@ class InputScope(PSBTScope):
+             elif self.sighash_type is None:
+                 if len(v) != 4:
+                     raise PSBTError("Sighash type should be 4 bytes long")
+-                self.sighash_type = int.from_bytes(v, "little")
++                _sighash_val = int.from_bytes(v, "little")
++                _VALID_SIGHASH_TYPES = {0, 1, 2, 3, 0x81, 0x82, 0x83}
++                if _sighash_val not in _VALID_SIGHASH_TYPES:
++                    raise PSBTError(
++                        "Sighash type inválido: {:#x}".format(_sighash_val)
++                    )
++                self.sighash_type = _sighash_val
+             else:
+                 raise PSBTError("Duplicated sighash type")
+         # redeem script
+@@ -344,10 +359,22 @@ class InputScope(PSBTScope):
+                 raise PSBTError("Duplicated final scriptwitness")
+ 
+         elif k == b"\x0e":
++            if len(v) != 32:
++                raise PSBTError(
++                    "PSBT_IN_PREVIOUS_TXID deve ter 32 bytes, tem {}".format(len(v))
++                )
+             self.txid = bytes(reversed(v))
+         elif k == b"\x0f":
++            if len(v) != 4:
++                raise PSBTError(
++                    "PSBT_IN_OUTPUT_INDEX deve ter 4 bytes, tem {}".format(len(v))
++                )
+             self.vout = int.from_bytes(v, "little")
+         elif k == b"\x10":
++            if len(v) != 4:
++                raise PSBTError(
++                    "PSBT_IN_SEQUENCE deve ter 4 bytes, tem {}".format(len(v))
++                )
+             self.sequence = int.from_bytes(v, "little")
+ 
+         # TODO: 0x13 - tap key signature
+@@ -371,14 +398,15 @@ class InputScope(PSBTScope):
+         # PSBT_IN_TAP_BIP32_DERIVATION
+         elif k[0] == 0x16:
+             pub = ec.PublicKey.from_xonly(k[1:])
+-            if pub not in self.taproot_bip32_derivations:
+-                b = BytesIO(v)
+-                num_leaf_hashes = compact.read_from(b)
+-                leaf_hashes = [b.read(32) for i in range(num_leaf_hashes)]
+-                if not all([len(leaf) == 32 for leaf in leaf_hashes]):
+-                    raise PSBTError("Invalid length of taproot leaf hashes")
+-                der = DerivationPath.read_from(b)
+-                self.taproot_bip32_derivations[pub] = (leaf_hashes, der)
++            if pub in self.taproot_bip32_derivations:
++                raise PSBTError("Duplicated taproot bip32 derivation")
++            b = BytesIO(v)
++            num_leaf_hashes = compact.read_from(b)
++            leaf_hashes = [b.read(32) for i in range(num_leaf_hashes)]
++            if not all([len(leaf) == 32 for leaf in leaf_hashes]):
++                raise PSBTError("Invalid length of taproot leaf hashes")
++            der = DerivationPath.read_from(b)
++            self.taproot_bip32_derivations[pub] = (leaf_hashes, der)
+ 
+         # PSBT_IN_TAP_INTERNAL_KEY
+         elif k[0] == 0x17:
+@@ -548,6 +576,10 @@ class OutputScope(PSBTScope):
+                 self.bip32_derivations[pub] = DerivationPath.parse(v)
+ 
+         elif k == b"\x03":
++            if len(v) != 8:
++                raise PSBTError(
++                    "PSBT_OUT_AMOUNT deve ter 8 bytes, tem {}".format(len(v))
++                )
+             self.value = int.from_bytes(v, "little")
+         elif k == b"\x04":
+             self.script_pubkey = Script(v)
+@@ -559,14 +591,15 @@ class OutputScope(PSBTScope):
+         # PSBT_OUT_TAP_BIP32_DERIVATION
+         elif k[0] == 0x07:
+             pub = ec.PublicKey.from_xonly(k[1:])
+-            if pub not in self.taproot_bip32_derivations:
+-                b = BytesIO(v)
+-                num_leaf_hashes = compact.read_from(b)
+-                leaf_hashes = [b.read(32) for i in range(num_leaf_hashes)]
+-                if not all([len(leaf) == 32 for leaf in leaf_hashes]):
+-                    raise PSBTError("Invalid length of taproot leaf hashes")
+-                der = DerivationPath.read_from(b)
+-                self.taproot_bip32_derivations[pub] = (leaf_hashes, der)
++            if pub in self.taproot_bip32_derivations:
++                raise PSBTError("Duplicated taproot bip32 derivation")
++            b = BytesIO(v)
++            num_leaf_hashes = compact.read_from(b)
++            leaf_hashes = [b.read(32) for i in range(num_leaf_hashes)]
++            if not all([len(leaf) == 32 for leaf in leaf_hashes]):
++                raise PSBTError("Invalid length of taproot leaf hashes")
++            der = DerivationPath.read_from(b)
++            self.taproot_bip32_derivations[pub] = (leaf_hashes, der)
+ 
+         else:
+             if k in self.unknown:
+@@ -674,13 +707,24 @@ class PSBT(EmbitBase):
+         return self.is_verified
+ 
+     def utxo(self, i):
+-        if self.inputs[i].is_verified:
+-            return self.inputs[i].utxo
+-        if not (self.inputs[i].witness_utxo or self.inputs[i].non_witness_utxo):
++        inp = self.inputs[i]
++        if inp.is_verified:
++            return inp.utxo
++        if not (inp.witness_utxo or inp.non_witness_utxo):
+             raise PSBTError("Missing previous utxo on input %d" % i)
++        # Para inputs com apenas witness_utxo (SegWit nativo), não há como verificar o txid
++        # O valor pode ser manipulado — avisar em contexto de hardware wallet
++        if inp.witness_utxo and not inp.non_witness_utxo:
++            import warnings
++            warnings.warn(
++                "Input %d: usando witness_utxo não verificado. "
++                "Para máxima segurança, forneça non_witness_utxo." % i,
++                UserWarning,
++                stacklevel=3,
++            )
+         return (
+-            self.inputs[i].witness_utxo
+-            or self.inputs[i].non_witness_utxo.vout[self.inputs[i].vout]
++            inp.witness_utxo
++            or inp.non_witness_utxo.vout[inp.vout]
+         )
+ 
+     def fee(self):
+@@ -828,8 +872,15 @@ class PSBT(EmbitBase):
+         inp = self.inputs[i]
+ 
+         if inp.is_taproot:
+-            values = [inp.utxo.value for inp in self.inputs]
+-            scripts = [inp.utxo.script_pubkey for inp in self.inputs]
++            values = []
++            scripts = []
++            for j, inp_j in enumerate(self.inputs):
++                if inp_j.utxo is None:
++                    raise PSBTError(
++                        "Input %d sem UTXO — necessário para sighash Taproot" % j
++                    )
++                values.append(inp_j.utxo.value)
++                scripts.append(inp_j.utxo.script_pubkey)
+             return self.sighash_taproot(
+                 i,
+                 script_pubkeys=scripts,
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/psbtview.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/psbtview.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/psbtview.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/psbtview.py"	2026-05-16 20:58:50.048038277 -0300
+@@ -70,19 +70,42 @@ class GlobalTransactionView:
+     - doesn't have witness
+     """
+ 
+-    LEN_VIN = 32 + 4 + 1 + 4  # txid, vout, scriptsig, sequence
+     NUM_VIN_OFFSET = 4  # version
+ 
+     def __init__(self, stream, offset):
+         self.stream = stream
+         self.offset = offset
+         self._num_vin = None
+-        self._vin0_offset = None
++        self._vin_offsets = None  # list of real per-input offsets
+         self._num_vout = None
+         self._vout0_offset = None
+         self._locktime = None
+         self._version = None
+ 
++    def _build_vin_offsets(self):
++        """Parse inputs sequentially to build real offsets, validating empty scriptsigs."""
++        num = self.num_vin
++        # vin0 starts right after the num_vin varint
++        pos = self.offset + self.NUM_VIN_OFFSET + len(compact.to_bytes(num))
++        offsets = []
++        for _ in range(num):
++            offsets.append(pos)
++            # seek to script_sig length varint: skip txid(32) + vout(4)
++            self.stream.seek(pos + 36)
++            script_len_raw = self.stream.read(1)
++            if len(script_len_raw) != 1:
++                raise PSBTError("Global tx input truncado ao ler scriptsig")
++            script_len = script_len_raw[0]
++            # BIP-174 requires scriptsig to be empty (varint 0x00)
++            if script_len != 0:
++                raise PSBTError(
++                    "Global tx inputs devem ter scriptsig vazio (BIP-174), "
++                    "mas input tem scriptsig de {} bytes".format(script_len)
++                )
++            # txid(32) + vout(4) + script_len_varint(1, value=0) + sequence(4)
++            pos += 32 + 4 + 1 + 4
++        self._vin_offsets = offsets
++
+     @property
+     def version(self):
+         if self._version is None:
+@@ -98,29 +121,29 @@ class GlobalTransactionView:
+         return self._num_vin
+ 
+     @property
+-    def num_vout(self):
+-        if self._num_vout is None:
+-            # version, n_vin, n_vin * len(vin)
+-            self.stream.seek(self.vin0_offset + self.LEN_VIN * self.num_vin)
+-            self._num_vout = compact.read_from(self.stream)
+-        return self._num_vout
++    def vin_offsets(self):
++        if self._vin_offsets is None:
++            self._build_vin_offsets()
++        return self._vin_offsets
+ 
+     @property
+-    def vin0_offset(self):
+-        if self._vin0_offset is None:
+-            self._vin0_offset = (
++    def num_vout(self):
++        if self._num_vout is None:
++            # vout count varint follows immediately after all inputs
++            after_vins = self.vin_offsets[-1] + 32 + 4 + 1 + 4 if self.vin_offsets else (
+                 self.offset + self.NUM_VIN_OFFSET + len(compact.to_bytes(self.num_vin))
+             )
+-        return self._vin0_offset
++            self.stream.seek(after_vins)
++            self._num_vout = compact.read_from(self.stream)
++        return self._num_vout
+ 
+     @property
+     def vout0_offset(self):
+         if self._vout0_offset is None:
+-            self._vout0_offset = (
+-                self.vin0_offset
+-                + self.LEN_VIN * self.num_vin
+-                + len(compact.to_bytes(self.num_vout))
++            after_vins = self.vin_offsets[-1] + 32 + 4 + 1 + 4 if self.vin_offsets else (
++                self.offset + self.NUM_VIN_OFFSET + len(compact.to_bytes(self.num_vin))
+             )
++            self._vout0_offset = after_vins + len(compact.to_bytes(self.num_vout))
+         return self._vout0_offset
+ 
+     @property
+@@ -137,7 +160,7 @@ class GlobalTransactionView:
+     def vin(self, i):
+         if i < 0 or i >= self.num_vin:
+             raise PSBTError("Invalid input index")
+-        self.stream.seek(self.vin0_offset + self.LEN_VIN * i)
++        self.stream.seek(self.vin_offsets[i])
+         return TransactionInput.read_from(self.stream)
+ 
+     def _skip_output(self):
+@@ -239,8 +262,10 @@ class PSBTView:
+                     num_outputs = compact.from_bytes(value)
+             elif key == b"\x00":
+                 # we found global transaction
+-                assert version != 2
+-                assert (num_inputs is None) and (num_outputs is None)
++                if version == 2:
++                    raise PSBTError("Global TX field is not allowed in PSBTv2")
++                if not ((num_inputs is None) and (num_outputs is None)):
++                    raise PSBTError("Duplicated global transaction field")
+                 tx_len = compact.read_from(stream)
+                 cur += len(compact.to_bytes(tx_len))
+                 tx_offset = cur
+@@ -594,9 +619,22 @@ class PSBTView:
+             scripts = []
+             # TODO: not very optimal. Maybe use build_cache() or something?
+             for idx in range(self.num_inputs):
+-                inp = self.input(idx)
+-                values.append(inp.utxo.value)
+-                scripts.append(inp.utxo.script_pubkey)
++                if idx == i and input_scope is not None:
++                    # usa UTXO já lido, evita double-read TOCTOU
++                    if input_scope.utxo is None:
++                        raise PSBTError(
++                            "Input %d sem UTXO — necessário para sighash Taproot" % idx
++                        )
++                    values.append(input_scope.utxo.value)
++                    scripts.append(input_scope.utxo.script_pubkey)
++                else:
++                    inp_j = self.input(idx)
++                    if inp_j.utxo is None:
++                        raise PSBTError(
++                            "Input %d sem UTXO — necessário para sighash Taproot" % idx
++                        )
++                    values.append(inp_j.utxo.value)
++                    scripts.append(inp_j.utxo.script_pubkey)
+             return self.sighash_taproot(
+                 i,
+                 script_pubkeys=scripts,
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/script.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/script.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/script.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/script.py"	2026-05-16 16:17:28.253489270 -0300
+@@ -111,6 +111,10 @@ class Witness(EmbitBase):
+         for i in range(num):
+             l = compact.read_from(stream)
+             data = stream.read(l)
++            if len(data) != l:
++                raise ValueError(
++                    "Witness item truncado: esperado {} bytes, lido {}".format(l, len(data))
++                )
+             items.append(data)
+         return cls(items)
+ 
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/slip39.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/slip39.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/slip39.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/slip39.py"	2026-05-16 20:57:37.435509594 -0300
+@@ -163,8 +163,8 @@ class ShareSet:
+         for i in range(255):
+             cls.exp[i] = cur
+             cls.log2[cur] = i
+-            cur = (cur << 1) ^ cur
+-            if cur > 255:
++            cur = cur << 1
++            if cur >= 256:
+                 cur ^= 0x11B
+ 
+     def __init__(self, shares):
+@@ -243,7 +243,7 @@ class ShareSet:
+ 
+     @classmethod
+     def digest(cls, r, shared_secret):
+-        return hmac.new(r, shared_secret, "sha256").digest()[:4]
++        return hmac.new(shared_secret, r, "sha256").digest()[:4]
+ 
+     @classmethod
+     def recover_secret(cls, share_data):
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/transaction.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/transaction.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/transaction.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/transaction.py"	2026-05-16 16:17:40.344953535 -0300
+@@ -376,10 +376,29 @@ class TransactionInput(EmbitBase):
+ 
+     @classmethod
+     def read_from(cls, stream):
+-        txid = bytes(reversed(stream.read(32)))
+-        vout = int.from_bytes(stream.read(4), "little")
++        txid_raw = stream.read(32)
++        if len(txid_raw) != 32:
++            raise TransactionError(
++                "txid truncado: esperado 32 bytes, lido {}".format(len(txid_raw))
++            )
++        txid = bytes(reversed(txid_raw))
++
++        vout_raw = stream.read(4)
++        if len(vout_raw) != 4:
++            raise TransactionError(
++                "vout truncado: esperado 4 bytes, lido {}".format(len(vout_raw))
++            )
++        vout = int.from_bytes(vout_raw, "little")
++
+         script_sig = Script.read_from(stream)
+-        sequence = int.from_bytes(stream.read(4), "little")
++
++        seq_raw = stream.read(4)
++        if len(seq_raw) != 4:
++            raise TransactionError(
++                "sequence truncado: esperado 4 bytes, lido {}".format(len(seq_raw))
++            )
++        sequence = int.from_bytes(seq_raw, "little")
++
+         return cls(txid, vout, script_sig, sequence)
+ 
+ 
+@@ -395,6 +414,11 @@ class TransactionOutput(EmbitBase):
+ 
+     @classmethod
+     def read_from(cls, stream):
+-        value = int.from_bytes(stream.read(8), "little")
++        value_raw = stream.read(8)
++        if len(value_raw) != 8:
++            raise TransactionError(
++                "value truncado: esperado 8 bytes, lido {}".format(len(value_raw))
++            )
++        value = int.from_bytes(value_raw, "little")
+         script_pubkey = Script.read_from(stream)
+         return cls(value, script_pubkey)
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/util/ctypes_secp256k1.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/util/ctypes_secp256k1.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/util/ctypes_secp256k1.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/util/ctypes_secp256k1.py"	2026-05-16 21:22:41.148211008 -0300
+@@ -114,7 +114,7 @@ def _init(flags=(CONTEXT_SIGN | CONTEXT_
+     secp256k1.secp256k1_ec_pubkey_create.argtypes = [c_void_p, c_void_p, c_char_p]
+     secp256k1.secp256k1_ec_pubkey_create.restype = c_int
+ 
+-    secp256k1.secp256k1_ec_pubkey_parse.argtypes = [c_void_p, c_char_p, c_char_p, c_int]
++    secp256k1.secp256k1_ec_pubkey_parse.argtypes = [c_void_p, c_char_p, c_char_p, c_size_t]
+     secp256k1.secp256k1_ec_pubkey_parse.restype = c_int
+ 
+     secp256k1.secp256k1_ec_pubkey_serialize.argtypes = [
+@@ -150,7 +150,7 @@ def _init(flags=(CONTEXT_SIGN | CONTEXT_
+         c_void_p,
+         c_char_p,
+         c_char_p,
+-        c_uint,
++        c_size_t,
+     ]
+     secp256k1.secp256k1_ecdsa_signature_parse_der.restype = c_int
+ 
+@@ -172,6 +172,13 @@ def _init(flags=(CONTEXT_SIGN | CONTEXT_
+     ]
+     secp256k1.secp256k1_ecdsa_sign.restype = c_int
+ 
++    secp256k1.secp256k1_ecdsa_signature_normalize.argtypes = [
++        c_void_p,  # ctx
++        c_char_p,  # sigout (64 bytes)
++        c_char_p,  # sigin  (64 bytes)
++    ]
++    secp256k1.secp256k1_ecdsa_signature_normalize.restype = c_int
++
+     secp256k1.secp256k1_ecdsa_verify.argtypes = [c_void_p, c_char_p, c_char_p, c_char_p]
+     secp256k1.secp256k1_ecdsa_verify.restype = c_int
+ 
+@@ -257,7 +264,7 @@ def _init(flags=(CONTEXT_SIGN | CONTEXT_
+         secp256k1.secp256k1_ecdsa_recoverable_signature_serialize_compact.argtypes = [
+             c_void_p,
+             c_char_p,
+-            c_char_p,
++            POINTER(c_int),
+             c_char_p,
+         ]
+         secp256k1.secp256k1_ecdsa_recoverable_signature_serialize_compact.restype = (
+@@ -473,6 +480,13 @@ def _init(flags=(CONTEXT_SIGN | CONTEXT_
+     secp256k1.ctx = secp256k1.secp256k1_context_create(flags)
+ 
+     r = secp256k1.secp256k1_context_randomize(secp256k1.ctx, os.urandom(32))
++    if not r:
++        import warnings
++        warnings.warn(
++            "secp256k1_context_randomize falhou — contexto não-randomizado. "
++            "Proteção contra side-channel inativa.",
++            RuntimeWarning,
++        )
+ 
+     return secp256k1
+ 
+@@ -591,7 +605,10 @@ def ecdsa_verify(sig, msg, pub, context=
+         raise ValueError("Message should be 32 bytes long")
+     if len(pub) != 64:
+         raise ValueError("Public key should be 64 bytes long")
+-    r = _secp.secp256k1_ecdsa_verify(context, sig, msg, pub)
++    # Normalizar para low-S antes de verificar (previne malleable signatures)
++    sig_normalized = bytes(64)
++    _secp.secp256k1_ecdsa_signature_normalize(context, sig_normalized, sig)
++    r = _secp.secp256k1_ecdsa_verify(context, sig_normalized, msg, pub)
+     return bool(r)
+ 
+ 
+@@ -624,7 +641,8 @@ def ec_privkey_negate(secret, context=_s
+     if len(secret) != 32:
+         raise ValueError("Secret should be 32 bytes long")
+     b = _copy(secret)
+-    _secp.secp256k1_ec_privkey_negate(context, b)
++    if _secp.secp256k1_ec_privkey_negate(context, b) == 0:
++        raise ValueError("Failed to negate private key (invalid secret)")
+     return b
+ 
+ 
+@@ -643,9 +661,12 @@ def ec_pubkey_negate(pubkey, context=_se
+ def ec_privkey_tweak_add(secret, tweak, context=_secp.ctx):
+     if len(secret) != 32 or len(tweak) != 32:
+         raise ValueError("Secret and tweak should both be 32 bytes long")
++    s = _copy(secret)
+     t = _copy(tweak)
+-    if _secp.secp256k1_ec_privkey_tweak_add(context, secret, tweak) == 0:
++    if _secp.secp256k1_ec_privkey_tweak_add(context, s, t) == 0:
+         raise ValueError("Failed to tweak the secret")
++    for i in range(32):
++        secret[i] = s[i]
+     return None
+ 
+ 
+@@ -815,13 +836,13 @@ def ecdsa_recoverable_signature_serializ
+     if len(sig) != 65:
+         raise ValueError("Recoverable signature should be 65 bytes long")
+     ser = bytes(64)
+-    idx = bytes(1)
++    recid_out = c_int(0)
+     r = _secp.secp256k1_ecdsa_recoverable_signature_serialize_compact(
+-        context, ser, idx, sig
++        context, ser, byref(recid_out), sig
+     )
+     if r == 0:
+         raise ValueError("Failed serializing der signature")
+-    return ser, idx[0]
++    return ser, recid_out.value
+ 
+ 
+ @locked
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/util/key.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/util/key.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/util/key.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/util/key.py"	2026-05-16 20:59:27.228432235 -0300
+@@ -2,9 +2,9 @@
+ Copy-paste from key.py in bitcoin test_framework.
+ This is a fallback option if the library can't do ctypes bindings to secp256k1 library.
+ """
+-import random
+ import hmac
+ import hashlib
++import os
+ 
+ 
+ def TaggedHash(tag, data):
+@@ -366,8 +366,11 @@ class ECPubKey:
+ 
+ 
+ def generate_privkey():
+-    """Generate a valid random 32-byte private key."""
+-    return random.randrange(1, SECP256K1_ORDER).to_bytes(32, "big")
++    """Generate a valid random 32-byte private key (cryptographically secure)."""
++    while True:
++        secret = int.from_bytes(os.urandom(32), "big")
++        if 1 <= secret < SECP256K1_ORDER:
++            return secret.to_bytes(32, "big")
+ 
+ 
+ class ECKey:
+@@ -445,7 +448,7 @@ def deterministic_k(secret, z, extra_dat
+     # RFC6979, optimized for secp256k1
+     k = b"\x00" * 32
+     v = b"\x01" * 32
+-    if z > SECP256K1_ORDER:
++    if z >= SECP256K1_ORDER:
+         z -= SECP256K1_ORDER
+     z_bytes = z.to_bytes(32, "big")
+     secret_bytes = secret.to_bytes(32, "big")
+@@ -579,7 +582,8 @@ def sign_schnorr(key, msg, aux=None, fli
+         )
+         % SECP256K1_ORDER
+     )
+-    assert kp != 0
++    if kp == 0:
++        return None
+     R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, kp)]))
+     k = kp if SECP256K1.has_even_y(R) != flip_r else SECP256K1_ORDER - kp
+     e = (
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/util/py_secp256k1.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/util/py_secp256k1.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/util/py_secp256k1.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/util/py_secp256k1.py"	2026-05-16 21:22:59.497798338 -0300
+@@ -194,6 +194,8 @@ def ec_privkey_negate(secret, context=No
+     if len(secret) != 32:
+         raise ValueError("Secret should be 32 bytes long")
+     s = int.from_bytes(secret, "big")
++    if s == 0 or s >= _key.SECP256K1_ORDER:
++        raise ValueError("Invalid secret key")
+     s2 = _key.SECP256K1_ORDER - s
+     return s2.to_bytes(32, "big")
+ 
+@@ -238,7 +240,7 @@ def ec_pubkey_add(pub, tweak, context=No
+         _key.SECP256K1.mul([(_key.SECP256K1_G, t), (pubkey.p, 1)])
+     )
+     if Q is None:
+-        return None
++        raise ValueError("Public key addition resulted in point at infinity")
+     return Q[0].to_bytes(32, "little") + Q[1].to_bytes(32, "little")
+ 
+ 
+@@ -302,7 +304,10 @@ def schnorrsig_sign(msg, keypair, nonce_
+     if len(keypair) == 32:
+         keypair = keypair_create(keypair, context=context)
+     assert len(keypair) == 96
+-    return _key.sign_schnorr(keypair[:32], msg, extra_data)
++    sig = _key.sign_schnorr(keypair[:32], msg, extra_data)
++    if sig is None:
++        raise ValueError("Failed to sign (invalid key or nonce)")
++    return sig
+ 
+ 
+ # recoverable
+@@ -330,7 +335,7 @@ def ecdsa_recoverable_signature_parse_co
+     if len(compact_sig) != 64:
+         raise ValueError("Signature should be 64 bytes long")
+     # TODO: also check r value so recid > 2 makes sense
+-    if recid < 0 or recid > 4:
++    if recid < 0 or recid > 3:
+         raise ValueError("Failed parsing compact signature")
+     return ecdsa_signature_parse_compact(compact_sig) + bytes([recid])
+ 
+diff -rpu '--exclude=__pycache__' '--exclude=*.pyc' /tmp/embit_orig/embit-0.8.0/src/embit/util/secp256k1.py "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/util/secp256k1.py"
+--- /tmp/embit_orig/embit-0.8.0/src/embit/util/secp256k1.py	2024-05-30 07:34:44.000000000 -0300
++++ "/home/btcneves/PhantOS ColdWallet/.venv/lib/python3.12/site-packages/embit/util/secp256k1.py"	2026-05-16 16:16:38.179407895 -0300
+@@ -2,11 +2,17 @@ try:
+     # if it's micropython
+     from micropython import const
+     from secp256k1 import *
+-except:
++except ImportError:
+     # we are in python
+     try:
+         # try ctypes bindings
+         from .ctypes_secp256k1 import *
+-    except:
+-        # fallback to python version
++    except (ImportError, OSError, AttributeError) as e:
++        import warnings
++        warnings.warn(
++            f"embit: libsecp256k1 não disponível ({e}), usando implementação Python pura. "
++            "NÃO use em produção para geração de chaves.",
++            RuntimeWarning,
++            stacklevel=2,
++        )
+         from .py_secp256k1 import *
