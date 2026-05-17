@@ -12,7 +12,7 @@
 
 ---
 
-> *"Vires in Numeris"*  —  Satoshi Nakamoto, 2008
+> *"The root problem with conventional currency is all the trust that's required to make it work."*     —  Satoshi Nakamoto, 2008
 
 **Open-source Bitcoin cold wallet for anyone. Boot from USB, restore your seed, derive addresses, sign transactions offline and shut down. Nothing saved to disk. Everything offline.**
 
