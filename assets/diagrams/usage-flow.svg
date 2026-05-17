@@ -130,44 +130,42 @@
 
   <line x1="760" y1="450" x2="760" y2="470" class="arrow"/>
 
-  <!-- ─── LINHA INFERIOR: Revisão + Assinatura ─── -->
+  <!-- ─── LINHA INFERIOR: 10 → 11 → 12 (esq. para dir.) ─── -->
 
-  <!-- Step 10: Revisar -->
-  <rect x="350" y="590" width="200" height="80" rx="8" class="step-sec"/>
-  <text x="370" y="613" class="num" fill="#FFCC00">10</text>
-  <text x="450" y="613" text-anchor="middle" class="label">Revisar PSBT</text>
-  <text x="450" y="630" text-anchor="middle" class="sublabel">valores · taxa · destinos</text>
-  <text x="450" y="645" text-anchor="middle" class="sublabel">alertas: fee alta · troco</text>
-  <text x="450" y="660" text-anchor="middle" class="sublabel">fingerprint · PSBTv2</text>
+  <!-- Step 10: Revisar PSBT (esquerda) -->
+  <rect x="40" y="590" width="200" height="80" rx="8" class="step-sec"/>
+  <text x="60" y="613" class="num" fill="#FFCC00">10</text>
+  <text x="140" y="613" text-anchor="middle" class="label">Revisar PSBT</text>
+  <text x="140" y="630" text-anchor="middle" class="sublabel">valores · taxa · destinos</text>
+  <text x="140" y="645" text-anchor="middle" class="sublabel">alertas: fee alta · troco</text>
+  <text x="140" y="660" text-anchor="middle" class="sublabel">fingerprint · PSBTv2</text>
 
-  <!-- Arrow 9→10: desce de step 9, passa acima das caixas (y=578), entra por cima de step 10 -->
-  <line x1="760" y1="550" x2="760" y2="578" class="arrow"/>
-  <line x1="760" y1="578" x2="450" y2="578" stroke="#F7931A" stroke-width="2" fill="none"/>
-  <line x1="450" y1="578" x2="450" y2="590" class="arrow"/>
+  <!-- Arrow 9→10: desce de step 9 (direita), passa acima das caixas (y=575), entra por cima de step 10 (esquerda) -->
+  <line x1="760" y1="550" x2="760" y2="575" stroke="#F7931A" stroke-width="2" fill="none"/>
+  <line x1="760" y1="575" x2="140" y2="575" stroke="#F7931A" stroke-width="2" fill="none"/>
+  <line x1="140" y1="575" x2="140" y2="590" class="arrow"/>
 
-  <!-- Step 11: Assinar -->
-  <rect x="660" y="590" width="200" height="80" rx="8" class="step-warn"/>
-  <text x="680" y="613" class="num" fill="#FF4444">11</text>
-  <text x="760" y="613" text-anchor="middle" class="label">Assinar PSBT</text>
-  <text x="760" y="630" text-anchor="middle" class="sublabel">gate: offline obrigatório</text>
-  <text x="760" y="645" text-anchor="middle" class="sublabel">confirm antes de assinar</text>
-  <text x="760" y="660" text-anchor="middle" class="sublabel">seed zerada após uso</text>
+  <!-- Step 11: Assinar PSBT (centro) -->
+  <rect x="350" y="590" width="200" height="80" rx="8" class="step-warn"/>
+  <text x="370" y="613" class="num" fill="#FF4444">11</text>
+  <text x="450" y="613" text-anchor="middle" class="label">Assinar PSBT</text>
+  <text x="450" y="630" text-anchor="middle" class="sublabel">gate: offline obrigatório</text>
+  <text x="450" y="645" text-anchor="middle" class="sublabel">confirm antes de assinar</text>
+  <text x="450" y="660" text-anchor="middle" class="sublabel">seed zerada após uso</text>
 
-  <!-- Arrow 10→11: horizontal simples na linha do meio -->
+  <!-- Arrow 10→11: horizontal simples -->
+  <line x1="240" y1="630" x2="350" y2="630" class="arrow"/>
+
+  <!-- Step 12: Exportar Assinada (direita) -->
+  <rect x="660" y="590" width="200" height="80" rx="8" class="step-qr"/>
+  <text x="680" y="613" class="num" fill="#00CCAA">12</text>
+  <text x="760" y="613" text-anchor="middle" class="label">Exportar Assinada</text>
+  <text x="760" y="630" text-anchor="middle" class="sublabel">base64 · UR crypto-psbt</text>
+  <text x="760" y="645" text-anchor="middle" class="sublabel">QR animado (fountain)</text>
+  <text x="760" y="660" text-anchor="middle" class="sublabel">→ carteira online transmite</text>
+
+  <!-- Arrow 11→12: horizontal simples -->
   <line x1="550" y1="630" x2="660" y2="630" class="arrow"/>
-
-  <!-- Step 12: Exportar assinada -->
-  <rect x="40" y="590" width="200" height="80" rx="8" class="step-qr"/>
-  <text x="60" y="613" class="num" fill="#00CCAA">12</text>
-  <text x="140" y="613" text-anchor="middle" class="label">Exportar Assinada</text>
-  <text x="140" y="630" text-anchor="middle" class="sublabel">base64 · UR crypto-psbt</text>
-  <text x="140" y="645" text-anchor="middle" class="sublabel">QR animado (fountain)</text>
-  <text x="140" y="660" text-anchor="middle" class="sublabel">→ carteira online transmite</text>
-
-  <!-- Arrow 11→12: passa abaixo das caixas (y=692) para não cruzar com 10→11 -->
-  <line x1="760" y1="670" x2="760" y2="692" stroke="#F7931A" stroke-width="2" fill="none"/>
-  <line x1="760" y1="692" x2="140" y2="692" stroke="#F7931A" stroke-width="2" fill="none"/>
-  <line x1="140" y1="692" x2="140" y2="670" class="arrow"/>
 
   <!-- ─── Notas laterais ─── -->
   <rect x="350" y="80" width="510" height="270" rx="8" fill="#111111" stroke="#222222" stroke-width="1"/>
