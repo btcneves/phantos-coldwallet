@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+*.iso
+*.img
+*.psbt
+*.signed
+*.log
+*.sha256
+*.sha512
+.[c]laude/

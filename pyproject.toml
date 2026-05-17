@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phantos-coldwallet"
+version = "1.0.0"
+description = "Carteira Bitcoin offline, open-source e bootável via pendrive."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "PhantOS Contributors" }]
+dependencies = [
+  "embit==0.8.0",
+  "btclib==2023.7.12",
+  "python-bitcointx==1.1.5",
+  "PySide6==6.11.1",
+  "qrcode[pil]==8.2",
+  "Pillow>=11.0,<13.0",
+  "urtypes==1.0.1",
+  "zxing-cpp==3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.0.3",
+  "ruff==0.15.13",
+  "mypy==2.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/btcneves/phantos-coldwallet"
+Repository = "https://github.com/btcneves/phantos-coldwallet"
+"Bug Tracker" = "https://github.com/btcneves/phantos-coldwallet/issues"
+Changelog = "https://github.com/btcneves/phantos-coldwallet/blob/master/CHANGELOG.md"
+
+[project.scripts]
+phantos-coldwallet = "app.main:main"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["app/ur/vendor"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "app/ur/vendor", ".venv"]
+skips = ["B101"]

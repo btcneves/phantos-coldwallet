@@ -1,0 +1,1 @@
+"""PhantOS ColdWallet application package."""
