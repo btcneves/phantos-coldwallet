@@ -177,10 +177,7 @@
   <line x1="660" y1="165" x2="660" y2="225" class="arrow"/>
 
   <!-- Arrows Core → Security -->
-  <line x1="120" y1="295" x2="120" y2="390" x2="133" y2="355" class="arrow"/>
-  <line x1="120" y1="295" x2="120" y2="310" class="arrow"/>
-  <line x1="120" y1="310" x2="133" y2="310" class="arrow"/>
-  <!-- simpler vertical lines -->
+  <line x1="120" y1="295" x2="120" y2="355" class="arrow"/>
   <line x1="300" y1="295" x2="333" y2="355" class="arrow"/>
 
   <!-- Legend -->
