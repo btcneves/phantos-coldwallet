@@ -1,0 +1,53 @@
+name: Python package artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to build"
+        required: true
+        default: "master"
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare Python package artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build cyclonedx-bom
+
+      - name: Validate repository
+        run: |
+          pip install -e ".[dev]"
+          ruff check .
+          ruff format --check .
+          mypy app/
+          pytest --tb=short -q
+          scripts/check_public_clean.sh
+
+      - name: Build Python package
+        run: python -m build
+
+      - name: Prepare checksums and SBOM
+        run: scripts/create_release_artifacts.sh dist/*.tar.gz dist/*.whl
+
+      - name: Upload prepared artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: phantos-python-package-artifacts
+          path: dist/release/
