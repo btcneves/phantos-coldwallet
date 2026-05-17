@@ -58,7 +58,7 @@ Clique em **🔒 Bloquear** para limpar todos os campos da memória.
 
 ## Sobre o word picker
 
-A partir da v0.2.1, o PhantOS usa campos individuais com autocomplete para a seed:
+O PhantOS usa campos individuais com autocomplete para a seed:
 
 - **Borda verde** = palavra BIP39 válida
 - **Borda vermelha** = nenhuma palavra BIP39 começa com esse texto
