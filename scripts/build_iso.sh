@@ -83,6 +83,13 @@ rsync -a --delete --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
   "$PROJECT_DIR/requirements.lock" \
   config/includes.chroot/opt/phantos/
 
+# Copia patches e script de aplicação para dentro do chroot
+mkdir -p config/includes.chroot/opt/phantos/patches
+cp "$PROJECT_DIR/patches/embit-0.8.0-phantos-security.patch" \
+  config/includes.chroot/opt/phantos/patches/
+install -m 0755 "$SCRIPT_DIR/apply_embit_patch.sh" \
+  config/includes.chroot/opt/phantos/apply_embit_patch.sh
+
 # Scripts de hardening
 mkdir -p config/includes.chroot/usr/local/bin
 install -m 0755 "$SCRIPT_DIR/harden_network.sh"  config/includes.chroot/usr/local/bin/phantos-harden-network
@@ -290,6 +297,13 @@ python3 -m venv /opt/phantos/.venv
 # Instala o app em modo editável dentro do venv
 cd /opt/phantos
 .venv/bin/pip install -e . --no-deps --quiet
+
+# Aplica patches de segurança ao embit 0.8.0 dentro do venv
+PATCH_FILE=/opt/phantos/patches/embit-0.8.0-phantos-security.patch
+SITE_PACKAGES=$(/opt/phantos/.venv/bin/python3 -c "import sysconfig; print(sysconfig.get_path('purelib'))")
+patch --directory="$SITE_PACKAGES" --strip=5 --forward \
+  --reject-file=/tmp/embit_patch_rejects.txt < "$PATCH_FILE"
+echo "[phantos-setup] Patches de segurança embit aplicados com sucesso"
 
 # Ajusta permissões
 chown -R phantos:phantos /opt/phantos
