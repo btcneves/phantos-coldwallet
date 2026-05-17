@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="620" viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', 'Courier New', monospace">
+  <defs>
+    <style>
+      .bg { fill: #0A0A0A; }
+      .title { font-size: 18px; font-weight: bold; fill: #F7931A; }
+      .subtitle { font-size: 11px; fill: #666666; }
+      .box-core { fill: #0F1A0F; stroke: #F7931A; stroke-width: 1.5; rx: 6; }
+      .box-ui { fill: #0A0A1A; stroke: #4488FF; stroke-width: 1.5; }
+      .box-ext { fill: #1A0A0A; stroke: #FF4444; stroke-width: 1.5; }
+      .box-sec { fill: #1A1A0A; stroke: #FFCC00; stroke-width: 1.5; }
+      .box-infra { fill: #0A1A1A; stroke: #00CCAA; stroke-width: 1.5; }
+      .label { font-size: 12px; fill: #E0E0E0; font-weight: bold; }
+      .sublabel { font-size: 10px; fill: #999999; }
+      .arrow { stroke: #444444; stroke-width: 1.5; fill: none; marker-end: url(#arr); }
+      .arrow-orange { stroke: #F7931A; stroke-width: 1.5; fill: none; marker-end: url(#arr-o); stroke-dasharray: 4,3; }
+      .section-label { font-size: 10px; fill: #555555; font-weight: bold; }
+      .layer-bg { fill: #111111; stroke: #222222; stroke-width: 1; rx: 8; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#444444"/>
+    </marker>
+    <marker id="arr-o" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#F7931A"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="620" class="bg"/>
+
+  <!-- Title -->
+  <text x="450" y="36" text-anchor="middle" class="title">₿  PhantOS ColdWallet — Arquitetura</text>
+  <text x="450" y="54" text-anchor="middle" class="subtitle">v1.0.0  ·  Módulos e fluxo de dados</text>
+
+  <!-- ── Layer: UI ── -->
+  <rect x="20" y="70" width="860" height="110" rx="8" class="layer-bg"/>
+  <text x="36" y="88" class="section-label">INTERFACE (PySide6)</text>
+
+  <!-- main_window -->
+  <rect x="40" y="95" width="160" height="70" rx="6" class="box-ui" fill="#0A0A1A" stroke="#4488FF" stroke-width="1.5"/>
+  <text x="120" y="118" text-anchor="middle" class="label">main_window</text>
+  <text x="120" y="133" text-anchor="middle" class="sublabel">MainWindow</text>
+  <text x="120" y="148" text-anchor="middle" class="sublabel">orquestrador UI</text>
+
+  <!-- bip39_input -->
+  <rect x="220" y="95" width="160" height="70" rx="6" class="box-ui" fill="#0A0A1A" stroke="#4488FF" stroke-width="1.5"/>
+  <text x="300" y="118" text-anchor="middle" class="label">bip39_input</text>
+  <text x="300" y="133" text-anchor="middle" class="sublabel">Bip39SeedWidget</text>
+  <text x="300" y="148" text-anchor="middle" class="sublabel">24/12 campos + checksum</text>
+
+  <!-- qr_dialog -->
+  <rect x="400" y="95" width="160" height="70" rx="6" class="box-ui" fill="#0A0A1A" stroke="#4488FF" stroke-width="1.5"/>
+  <text x="480" y="118" text-anchor="middle" class="label">qr_dialog</text>
+  <text x="480" y="133" text-anchor="middle" class="sublabel">QRDisplayDialog</text>
+  <text x="480" y="148" text-anchor="middle" class="sublabel">AnimatedQRDialog</text>
+
+  <!-- camera_dialog -->
+  <rect x="580" y="95" width="160" height="70" rx="6" class="box-ui" fill="#0A0A1A" stroke="#4488FF" stroke-width="1.5"/>
+  <text x="660" y="118" text-anchor="middle" class="label">camera_dialog</text>
+  <text x="660" y="133" text-anchor="middle" class="sublabel">CameraDialog</text>
+  <text x="660" y="148" text-anchor="middle" class="sublabel">scan QR via webcam</text>
+
+  <!-- bitcoin_rain -->
+  <rect x="760" y="95" width="100" height="70" rx="6" class="box-ui" fill="#0A0A1A" stroke="#4488FF" stroke-width="1.5"/>
+  <text x="810" y="118" text-anchor="middle" class="label">bitcoin</text>
+  <text x="810" y="133" text-anchor="middle" class="label">rain</text>
+  <text x="810" y="148" text-anchor="middle" class="sublabel">header animado</text>
+
+  <!-- ── Layer: Core ── -->
+  <rect x="20" y="200" width="860" height="110" rx="8" class="layer-bg"/>
+  <text x="36" y="218" class="section-label">NÚCLEO BITCOIN</text>
+
+  <!-- wallet -->
+  <rect x="40" y="225" width="160" height="70" rx="6" fill="#0F1A0F" stroke="#F7931A" stroke-width="1.5"/>
+  <text x="120" y="248" text-anchor="middle" class="label">wallet/core</text>
+  <text x="120" y="263" text-anchor="middle" class="sublabel">BIP39 · BIP32 · HD</text>
+  <text x="120" y="278" text-anchor="middle" class="sublabel">derive · generate</text>
+
+  <!-- psbt -->
+  <rect x="220" y="225" width="160" height="70" rx="6" fill="#0F1A0F" stroke="#F7931A" stroke-width="1.5"/>
+  <text x="300" y="248" text-anchor="middle" class="label">psbt/core</text>
+  <text x="300" y="263" text-anchor="middle" class="sublabel">parse · review · sign</text>
+  <text x="300" y="278" text-anchor="middle" class="sublabel">presentation</text>
+
+  <!-- descriptors -->
+  <rect x="400" y="225" width="160" height="70" rx="6" fill="#0F1A0F" stroke="#F7931A" stroke-width="1.5"/>
+  <text x="480" y="248" text-anchor="middle" class="label">descriptors</text>
+  <text x="480" y="263" text-anchor="middle" class="sublabel">BIP44/49/84/86</text>
+  <text x="480" y="278" text-anchor="middle" class="sublabel">xpub · zpub · ypub</text>
+
+  <!-- qr -->
+  <rect x="580" y="225" width="160" height="70" rx="6" fill="#0F1A0F" stroke="#F7931A" stroke-width="1.5"/>
+  <text x="660" y="248" text-anchor="middle" class="label">qr/core</text>
+  <text x="660" y="263" text-anchor="middle" class="sublabel">generate · decode</text>
+  <text x="660" y="278" text-anchor="middle" class="sublabel">zxing-cpp · qrcode</text>
+
+  <!-- ur -->
+  <rect x="760" y="225" width="100" height="70" rx="6" fill="#0F1A0F" stroke="#F7931A" stroke-width="1.5"/>
+  <text x="810" y="248" text-anchor="middle" class="label">ur/core</text>
+  <text x="810" y="263" text-anchor="middle" class="sublabel">crypto-psbt</text>
+  <text x="810" y="278" text-anchor="middle" class="sublabel">fountain</text>
+
+  <!-- ── Layer: Security ── -->
+  <rect x="20" y="330" width="420" height="110" rx="8" class="layer-bg"/>
+  <text x="36" y="348" class="section-label">SEGURANÇA E SISTEMA</text>
+
+  <!-- security/core -->
+  <rect x="40" y="355" width="185" height="70" rx="6" fill="#1A1A0A" stroke="#FFCC00" stroke-width="1.5"/>
+  <text x="133" y="378" text-anchor="middle" class="label">security/core</text>
+  <text x="133" y="393" text-anchor="middle" class="sublabel">offline status · rfkill</text>
+  <text x="133" y="408" text-anchor="middle" class="sublabel">safe_event · redaction</text>
+
+  <!-- security/memory -->
+  <rect x="245" y="355" width="175" height="70" rx="6" fill="#1A1A0A" stroke="#FFCC00" stroke-width="1.5"/>
+  <text x="333" y="378" text-anchor="middle" class="label">security/memory</text>
+  <text x="333" y="393" text-anchor="middle" class="sublabel">mlock · zero_bytearray</text>
+  <text x="333" y="408" text-anchor="middle" class="sublabel">seed RAM protection</text>
+
+  <!-- ── Layer: i18n ── -->
+  <rect x="460" y="330" width="200" height="110" rx="8" class="layer-bg"/>
+  <text x="476" y="348" class="section-label">INTERNACIONALIZAÇÃO</text>
+
+  <rect x="480" y="355" width="160" height="70" rx="6" fill="#0A1A1A" stroke="#00CCAA" stroke-width="1.5"/>
+  <text x="560" y="378" text-anchor="middle" class="label">i18n/strings</text>
+  <text x="560" y="393" text-anchor="middle" class="sublabel">pt_BR · en_US</text>
+  <text x="560" y="408" text-anchor="middle" class="sublabel">tr() · set_language()</text>
+
+  <!-- ── Layer: External ── -->
+  <rect x="680" y="330" width="200" height="110" rx="8" class="layer-bg"/>
+  <text x="696" y="348" class="section-label">DEPENDÊNCIAS</text>
+
+  <rect x="700" y="355" width="160" height="70" rx="6" fill="#1A0A0A" stroke="#FF4444" stroke-width="1.5"/>
+  <text x="780" y="373" text-anchor="middle" class="label">embit</text>
+  <text x="780" y="388" text-anchor="middle" class="sublabel">btclib · bitcointx</text>
+  <text x="780" y="403" text-anchor="middle" class="sublabel">urtypes · Pillow</text>
+  <text x="780" y="418" text-anchor="middle" class="sublabel">PySide6 6.11.1</text>
+
+  <!-- ── Layer: Build/CI ── -->
+  <rect x="20" y="460" width="860" height="130" rx="8" class="layer-bg"/>
+  <text x="36" y="478" class="section-label">BUILD, TESTES E CI/CD</text>
+
+  <rect x="40" y="485" width="150" height="90" rx="6" fill="#0A1A1A" stroke="#00CCAA" stroke-width="1.5"/>
+  <text x="115" y="508" text-anchor="middle" class="label">build_iso.sh</text>
+  <text x="115" y="523" text-anchor="middle" class="sublabel">live-build Debian</text>
+  <text x="115" y="538" text-anchor="middle" class="sublabel">Bookworm kiosk</text>
+  <text x="115" y="553" text-anchor="middle" class="sublabel">BIOS + UEFI hybrid</text>
+
+  <rect x="210" y="485" width="150" height="90" rx="6" fill="#0A1A1A" stroke="#00CCAA" stroke-width="1.5"/>
+  <text x="285" y="508" text-anchor="middle" class="label">write_usb.sh</text>
+  <text x="285" y="523" text-anchor="middle" class="sublabel">dd + SHA256</text>
+  <text x="285" y="538" text-anchor="middle" class="sublabel">CONFIRM_WIPE</text>
+  <text x="285" y="553" text-anchor="middle" class="sublabel">ISO_SHA256 verify</text>
+
+  <rect x="380" y="485" width="150" height="90" rx="6" fill="#0A1A1A" stroke="#00CCAA" stroke-width="1.5"/>
+  <text x="455" y="508" text-anchor="middle" class="label">harden_*.sh</text>
+  <text x="455" y="523" text-anchor="middle" class="sublabel">nftables drop-all</text>
+  <text x="455" y="538" text-anchor="middle" class="sublabel">rfkill Wi-Fi/BT</text>
+  <text x="455" y="553" text-anchor="middle" class="sublabel">sysctl hardening</text>
+
+  <rect x="550" y="485" width="150" height="90" rx="6" fill="#1A0F00" stroke="#F7931A" stroke-width="1.5"/>
+  <text x="625" y="503" text-anchor="middle" class="label">CI — GitHub</text>
+  <text x="625" y="518" text-anchor="middle" class="label">Actions</text>
+  <text x="625" y="533" text-anchor="middle" class="sublabel">ruff · mypy · pytest</text>
+  <text x="625" y="548" text-anchor="middle" class="sublabel">bandit · pip-audit</text>
+  <text x="625" y="563" text-anchor="middle" class="sublabel">gitleaks · osv-scan</text>
+
+  <rect x="720" y="485" width="140" height="90" rx="6" fill="#1A0F00" stroke="#F7931A" stroke-width="1.5"/>
+  <text x="790" y="508" text-anchor="middle" class="label">176 testes</text>
+  <text x="790" y="523" text-anchor="middle" class="sublabel">BIP39 · PSBT</text>
+  <text x="790" y="538" text-anchor="middle" class="sublabel">security · QR</text>
+  <text x="790" y="553" text-anchor="middle" class="sublabel">0 warnings</text>
+
+  <!-- Arrows UI → Core -->
+  <line x1="120" y1="165" x2="120" y2="225" class="arrow"/>
+  <line x1="300" y1="165" x2="300" y2="225" class="arrow"/>
+  <line x1="480" y1="165" x2="480" y2="225" class="arrow"/>
+  <line x1="660" y1="165" x2="660" y2="225" class="arrow"/>
+
+  <!-- Arrows Core → Security -->
+  <line x1="120" y1="295" x2="120" y2="390" x2="133" y2="355" class="arrow"/>
+  <line x1="120" y1="295" x2="120" y2="310" class="arrow"/>
+  <line x1="120" y1="310" x2="133" y2="310" class="arrow"/>
+  <!-- simpler vertical lines -->
+  <line x1="300" y1="295" x2="333" y2="355" class="arrow"/>
+
+  <!-- Legend -->
+  <rect x="20" y="600" width="12" height="8" fill="#0A0A1A" stroke="#4488FF" stroke-width="1"/>
+  <text x="36" y="608" class="sublabel" fill="#4488FF">Interface</text>
+  <rect x="100" y="600" width="12" height="8" fill="#0F1A0F" stroke="#F7931A" stroke-width="1"/>
+  <text x="116" y="608" class="sublabel" fill="#F7931A">Núcleo Bitcoin</text>
+  <rect x="210" y="600" width="12" height="8" fill="#1A1A0A" stroke="#FFCC00" stroke-width="1"/>
+  <text x="226" y="608" class="sublabel" fill="#FFCC00">Segurança</text>
+  <rect x="295" y="600" width="12" height="8" fill="#1A0A0A" stroke="#FF4444" stroke-width="1"/>
+  <text x="311" y="608" class="sublabel" fill="#FF4444">Dependências</text>
+  <rect x="400" y="600" width="12" height="8" fill="#0A1A1A" stroke="#00CCAA" stroke-width="1"/>
+  <text x="416" y="608" class="sublabel" fill="#00CCAA">Build / CI</text>
+</svg>

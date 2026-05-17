@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="700" viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', 'Courier New', monospace">
+  <defs>
+    <style>
+      .bg { fill: #0A0A0A; }
+      .title { font-size: 18px; font-weight: bold; fill: #F7931A; }
+      .subtitle { font-size: 11px; fill: #666666; }
+      .step { fill: #0F1A0F; stroke: #F7931A; stroke-width: 1.5; }
+      .step-alt { fill: #0A0A1A; stroke: #4488FF; stroke-width: 1.5; }
+      .step-sec { fill: #1A1A0A; stroke: #FFCC00; stroke-width: 1.5; }
+      .step-qr { fill: #0A1A1A; stroke: #00CCAA; stroke-width: 1.5; }
+      .step-warn { fill: #1A0A0A; stroke: #FF4444; stroke-width: 1.5; }
+      .label { font-size: 12px; fill: #E0E0E0; font-weight: bold; }
+      .sublabel { font-size: 10px; fill: #999999; }
+      .num { font-size: 14px; fill: #F7931A; font-weight: bold; }
+      .arrow { stroke: #F7931A; stroke-width: 2; fill: none; marker-end: url(#arr); }
+      .arrow-gray { stroke: #444444; stroke-width: 1.5; fill: none; marker-end: url(#arr-g); stroke-dasharray: 4,3; }
+      .section { font-size: 10px; fill: #F7931A; font-weight: bold; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#F7931A"/>
+    </marker>
+    <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#444444"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="700" class="bg"/>
+
+  <!-- Title -->
+  <text x="450" y="36" text-anchor="middle" class="title">₿  PhantOS ColdWallet — Fluxo de Uso</text>
+  <text x="450" y="54" text-anchor="middle" class="subtitle">Do pendrive bootável à transação assinada offline</text>
+
+  <!-- ─── COLUNA ESQUERDA: Setup ─── -->
+
+  <!-- Step 1: Boot pendrive -->
+  <rect x="40" y="80" width="200" height="80" rx="8" class="step"/>
+  <text x="60" y="103" class="num">01</text>
+  <text x="140" y="103" text-anchor="middle" class="label">Boot USB</text>
+  <text x="140" y="120" text-anchor="middle" class="sublabel">Pendrive Debian Bookworm</text>
+  <text x="140" y="135" text-anchor="middle" class="sublabel">kiosk · sem disco · offline</text>
+  <text x="140" y="150" text-anchor="middle" class="sublabel">BIOS/UEFI hybrid</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="140" y1="160" x2="140" y2="180" class="arrow"/>
+
+  <!-- Step 2: Hardening -->
+  <rect x="40" y="180" width="200" height="80" rx="8" class="step-sec"/>
+  <text x="60" y="203" class="num" fill="#FFCC00">02</text>
+  <text x="140" y="203" text-anchor="middle" class="label">Hardening</text>
+  <text x="140" y="220" text-anchor="middle" class="sublabel">nftables drop-all</text>
+  <text x="140" y="235" text-anchor="middle" class="sublabel">rfkill Wi-Fi/BT</text>
+  <text x="140" y="250" text-anchor="middle" class="sublabel">swap off · core dump off</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="140" y1="260" x2="140" y2="280" class="arrow"/>
+
+  <!-- Step 3: Launch app -->
+  <rect x="40" y="280" width="200" height="70" rx="8" class="step-alt"/>
+  <text x="60" y="303" class="num" fill="#4488FF">03</text>
+  <text x="140" y="303" text-anchor="middle" class="label">Lançar App</text>
+  <text x="140" y="320" text-anchor="middle" class="sublabel">PhantOS ColdWallet</text>
+  <text x="140" y="335" text-anchor="middle" class="sublabel">status offline verificado</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="140" y1="350" x2="140" y2="370" class="arrow"/>
+
+  <!-- Step 4: Seed -->
+  <rect x="40" y="370" width="200" height="80" rx="8" class="step"/>
+  <text x="60" y="393" class="num">04</text>
+  <text x="140" y="393" text-anchor="middle" class="label">Seed BIP39</text>
+  <text x="140" y="410" text-anchor="middle" class="sublabel">⊕ Gerar 12/24 palavras</text>
+  <text x="140" y="425" text-anchor="middle" class="sublabel">⟲ Restaurar existente</text>
+  <text x="140" y="440" text-anchor="middle" class="sublabel">+ passphrase opcional</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="140" y1="450" x2="140" y2="470" class="arrow"/>
+
+  <!-- Step 5: Derivar endereços -->
+  <rect x="40" y="470" width="200" height="80" rx="8" class="step"/>
+  <text x="60" y="493" class="num">05</text>
+  <text x="140" y="493" text-anchor="middle" class="label">Derivar Endereços</text>
+  <text x="140" y="510" text-anchor="middle" class="sublabel">BIP44 · BIP49 · BIP84 · BIP86</text>
+  <text x="140" y="525" text-anchor="middle" class="sublabel">xpub · zpub · ypub</text>
+  <text x="140" y="540" text-anchor="middle" class="sublabel">fingerprint verificado</text>
+
+  <!-- ─── COLUNA CENTRAL: Exportar ─── -->
+
+  <!-- Step 6: Export Watch-only -->
+  <rect x="350" y="370" width="200" height="80" rx="8" class="step-qr"/>
+  <text x="370" y="393" class="num" fill="#00CCAA">06</text>
+  <text x="450" y="393" text-anchor="middle" class="label">Exportar</text>
+  <text x="450" y="408" text-anchor="middle" class="label">Watch-only</text>
+  <text x="450" y="425" text-anchor="middle" class="sublabel">descriptor · xpub</text>
+  <text x="450" y="440" text-anchor="middle" class="sublabel">QR estático ou arquivo</text>
+
+  <!-- Arrow 5→6 horizontal -->
+  <line x1="240" y1="510" x2="350" y2="410" class="arrow"/>
+
+  <!-- Step 7: Hot wallet recebe -->
+  <rect x="350" y="470" width="200" height="80" rx="8" class="step-alt"/>
+  <text x="370" y="493" class="num" fill="#4488FF">07</text>
+  <text x="450" y="493" text-anchor="middle" class="label">Receber Bitcoin</text>
+  <text x="450" y="510" text-anchor="middle" class="sublabel">Sparrow · Electrum</text>
+  <text x="450" y="525" text-anchor="middle" class="sublabel">BlueWallet (online)</text>
+  <text x="450" y="540" text-anchor="middle" class="sublabel">importa descriptor</text>
+
+  <line x1="450" y1="450" x2="450" y2="470" class="arrow"/>
+
+  <!-- ─── COLUNA DIREITA: PSBT ─── -->
+
+  <!-- Step 8: Construir PSBT -->
+  <rect x="660" y="370" width="200" height="80" rx="8" class="step-alt"/>
+  <text x="680" y="393" class="num" fill="#4488FF">08</text>
+  <text x="760" y="393" text-anchor="middle" class="label">Criar PSBT</text>
+  <text x="760" y="410" text-anchor="middle" class="sublabel">carteira online (Sparrow)</text>
+  <text x="760" y="425" text-anchor="middle" class="sublabel">constrói transação</text>
+  <text x="760" y="440" text-anchor="middle" class="sublabel">exporta PSBT não assinada</text>
+
+  <line x1="550" y1="510" x2="660" y2="410" class="arrow"/>
+
+  <!-- Step 9: Importar PSBT -->
+  <rect x="660" y="470" width="200" height="80" rx="8" class="step"/>
+  <text x="680" y="493" class="num">09</text>
+  <text x="760" y="493" text-anchor="middle" class="label">Importar PSBT</text>
+  <text x="760" y="510" text-anchor="middle" class="sublabel">QR camera / arquivo USB</text>
+  <text x="760" y="525" text-anchor="middle" class="sublabel">base64 · hex · UR</text>
+  <text x="760" y="540" text-anchor="middle" class="sublabel">crypto-psbt multipart</text>
+
+  <line x1="760" y1="450" x2="760" y2="470" class="arrow"/>
+
+  <!-- ─── LINHA INFERIOR: Revisão + Assinatura ─── -->
+
+  <!-- Step 10: Revisar -->
+  <rect x="350" y="590" width="200" height="80" rx="8" class="step-sec"/>
+  <text x="370" y="613" class="num" fill="#FFCC00">10</text>
+  <text x="450" y="613" text-anchor="middle" class="label">Revisar PSBT</text>
+  <text x="450" y="630" text-anchor="middle" class="sublabel">valores · taxa · destinos</text>
+  <text x="450" y="645" text-anchor="middle" class="sublabel">alertas: fee alta · troco</text>
+  <text x="450" y="660" text-anchor="middle" class="sublabel">fingerprint · PSBTv2</text>
+
+  <!-- Arrow 9→10 -->
+  <line x1="760" y1="550" x2="760" y2="630" class="arrow"/>
+  <line x1="760" y1="630" x2="550" y2="630" class="arrow"/>
+
+  <!-- Step 11: Assinar -->
+  <rect x="660" y="590" width="200" height="80" rx="8" class="step-warn"/>
+  <text x="680" y="613" class="num" fill="#FF4444">11</text>
+  <text x="760" y="613" text-anchor="middle" class="label">Assinar PSBT</text>
+  <text x="760" y="630" text-anchor="middle" class="sublabel">gate: offline obrigatório</text>
+  <text x="760" y="645" text-anchor="middle" class="sublabel">confirm antes de assinar</text>
+  <text x="760" y="660" text-anchor="middle" class="sublabel">seed zerada após uso</text>
+
+  <!-- Arrow 10→11 -->
+  <line x1="550" y1="630" x2="660" y2="630" class="arrow"/>
+
+  <!-- Step 12: Exportar assinada -->
+  <rect x="40" y="590" width="200" height="80" rx="8" class="step-qr"/>
+  <text x="60" y="613" class="num" fill="#00CCAA">12</text>
+  <text x="140" y="613" text-anchor="middle" class="label">Exportar Assinada</text>
+  <text x="140" y="630" text-anchor="middle" class="sublabel">base64 · UR crypto-psbt</text>
+  <text x="140" y="645" text-anchor="middle" class="sublabel">QR animado (fountain)</text>
+  <text x="140" y="660" text-anchor="middle" class="sublabel">→ carteira online transmite</text>
+
+  <!-- Arrow 11→12 (bottom, going left) -->
+  <line x1="660" y1="630" x2="450" y2="630" class="arrow"/>
+  <line x1="350" y1="630" x2="240" y2="630" class="arrow"/>
+
+  <!-- ─── Notas laterais ─── -->
+  <rect x="350" y="80" width="510" height="270" rx="8" fill="#111111" stroke="#222222" stroke-width="1"/>
+  <text x="370" y="102" class="section">OPERAÇÃO COLD WALLET (offline — sem internet)</text>
+
+  <text x="370" y="130" class="sublabel">O dispositivo NUNCA se conecta à internet durante operação.</text>
+  <text x="370" y="148" class="sublabel">Dados entram/saem APENAS por QR code ou pendrive USB.</text>
+
+  <line x1="370" y1="158" x2="840" y2="158" stroke="#333333" stroke-width="1"/>
+
+  <text x="370" y="178" class="label" fill="#FFCC00">Proteções ativas:</text>
+  <text x="370" y="198" class="sublabel">✓  Seed em bytearray + mlock (RAM protegida)</text>
+  <text x="370" y="215" class="sublabel">✓  Zeroização garantida após uso (finally block)</text>
+  <text x="370" y="232" class="sublabel">✓  Assinatura bloqueada se online detectado</text>
+  <text x="370" y="249" class="sublabel">✓  Redação automática de logs (safe_event)</text>
+  <text x="370" y="266" class="sublabel">✓  Validação obrigatória antes de gravar ISO no USB</text>
+  <text x="370" y="283" class="sublabel">✓  176 testes automatizados · 0 warnings</text>
+  <text x="370" y="300" class="sublabel">✓  Patch de segurança embit v0.8.0 (40+ fixes)</text>
+  <text x="370" y="320" class="sublabel" fill="#FF4444">⚠  Passphrase perdida = fundos irrecuperáveis</text>
+  <text x="370" y="337" class="sublabel" fill="#FFCC00">⚠  Taproot (BIP86) e UR multipart são experimentais</text>
+</svg>

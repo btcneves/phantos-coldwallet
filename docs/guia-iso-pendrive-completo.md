@@ -20,15 +20,15 @@ Você pode **gerar a ISO localmente** (recomendado para máxima confiança) ou *
 
 ### Opção A: Baixar release oficial
 
-Acesse a [página de releases](https://github.com/btcneves/phantos-coldwallet/releases) e baixe a versão publicada mais recente. Em 2026-05-16, a release pública marcada como Latest no GitHub é a v0.1.0:
+Acesse a [página de releases](https://github.com/btcneves/phantos-coldwallet/releases) e baixe a versão publicada mais recente. A versão atual marcada como Latest no GitHub é a v1.0.0:
 
-- `phantos-coldwallet-0.1.0-amd64.iso`
-- `phantos-coldwallet-0.1.0-amd64.iso.sha256` (hash de verificação)
+- `phantos-coldwallet-1.0.0-amd64.iso`
+- `phantos-coldwallet-1.0.0-amd64.iso.sha256` (hash de verificação)
 
 Verifique a integridade antes de prosseguir:
 
 ```bash
-sha256sum -c phantos-coldwallet-0.1.0-amd64.iso.sha256
+sha256sum -c phantos-coldwallet-1.0.0-amd64.iso.sha256
 ```
 
 ### Opção B: Gerar a ISO localmente

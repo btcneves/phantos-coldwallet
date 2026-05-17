@@ -2,7 +2,7 @@
 
 ## Como funciona a entrada de seed words
 
-A partir da versão 0.2.1, o campo de seed usa um **word picker individual** com autocomplete,
+O campo de seed usa um **word picker individual** com autocomplete,
 similar ao Electrum e ao Sparrow Wallet.
 
 ### O que você verá na tela

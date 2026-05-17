@@ -7,13 +7,12 @@
 [![Licença: MIT](https://img.shields.io/badge/Licença-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-F7931A?logo=bitcoin&logoColor=white)](https://bitcoin.org)
-[![Testes: pytest](https://img.shields.io/badge/Testes-pytest-brightgreen.svg)](tests/)
-[![Status: Beta](https://img.shields.io/badge/Status-Beta-orange.svg)](CHANGELOG.md)
+[![Testes: 176 passando](https://img.shields.io/badge/Testes-176%20passando-brightgreen.svg)](tests/)
+[![Status: v1.0.0](https://img.shields.io/badge/Status-v1.0.0%20estável-green.svg)](CHANGELOG.md)
 
 ---
 
-> *"The root problem with conventional currency is all the trust that's required to make it work."*
-> — Satoshi Nakamoto, 2009
+> *"Vires in Numeris"*  —  Satoshi Nakamoto, 2008
 
 **Cold wallet Bitcoin open-source para qualquer pessoa. Boot do pendrive, restaure sua seed, derive endereços, assine transações offline e desligue. Nada salvo em disco. Tudo offline.**
 
@@ -23,11 +22,17 @@
 
 ![Tela inicial](assets/screenshots/01-tela-inicial.png)
 
-![Carteira carregada](assets/screenshots/03-carteira-restaurada.png)
+![Seed BIP39 inserida — 24 campos com autocomplete e validação](assets/screenshots/02-seed-inserida.png)
 
-![Recuperar endereços](assets/screenshots/04-recuperar-enderecos.png)
+![Carteira restaurada — endereços BIP84 Native SegWit](assets/screenshots/03-carteira-restaurada.png)
 
-![Watch-only export](assets/screenshots/05-watch-only-export.png)
+![Recuperar endereços em todos os padrões (BIP44/49/84/86)](assets/screenshots/04-recuperar-enderecos.png)
+
+![Watch-only export — descriptor e xpub para carteira observadora](assets/screenshots/05-watch-only-export.png)
+
+![QR da carteira — zpub / descriptor para Sparrow ou Electrum](assets/screenshots/07-qr-carteira.png)
+
+![Revisão de PSBT — taxa, destinos e avisos de segurança](assets/screenshots/08-psbt-review.png)
 
 ---
 
@@ -39,23 +44,45 @@ PhantOS ColdWallet é uma carteira fria Bitcoin para uso offline, executada dire
 
 ## Recursos Principais
 
-- 🔑 **Geração de seed BIP39** — 12 ou 24 palavras com entropia do sistema (`secrets.token_bytes()`)
-- 🔄 **Restauração de carteira** — seed + passphrase BIP39 opcional
-- 📐 **Derivação multi-padrão** — BIP44 (Legacy), BIP49 (Nested SegWit), BIP84 (Native SegWit, padrão), BIP86 (Taproot, experimental)
-- 📤 **Exportação watch-only** — fingerprint, xpub/zpub/ypub, descriptors completos
-- ✍️ **Assinatura PSBT offline** — parse, revisão e assinatura com alertas de segurança
-- 🚨 **Alertas de PSBT** — taxa alta, troco não reconhecido, fingerprint divergente
-- 📷 **QR simples** — exportação de xpub e descriptors como QR estático
-- 🎞️ **UR `crypto-psbt`** — single-part e multipart no core; interoperabilidade externa ainda em validação
-- 📸 **Scan QR por câmera** — importação de PSBT diretamente pela webcam
-- 🎨 **Interface dark Bitcoin** — laranja `#F7931A`, fundo `#0A0A0A`, tipografia monospace
-- 🔒 **Hardening de rede** — Wi-Fi e Bluetooth desabilitados, `nftables` drop-all
-- 💾 **Bootável via pendrive** — live Debian Bookworm, openbox kiosk, autologin
-- ✅ **Testes automatizados** — ruff, mypy e pytest na validação local e no CI
+- **Geração de seed BIP39** — 12 ou 24 palavras com entropia do sistema (`secrets.token_bytes()`)
+- **Restauração de carteira** — seed + passphrase BIP39 opcional
+- **Derivação multi-padrão** — BIP44 (Legacy), BIP49 (Nested SegWit), BIP84 (Native SegWit, padrão), BIP86 (Taproot, experimental)
+- **Exportação watch-only** — fingerprint, xpub/zpub/ypub, descriptors completos
+- **Assinatura PSBT offline** — parse, revisão e assinatura com alertas de segurança
+- **Alertas de PSBT** — taxa alta, troco não reconhecido, fingerprint divergente
+- **QR simples** — exportação de xpub e descriptors como QR estático
+- **UR `crypto-psbt`** — single-part e multipart no core; interoperabilidade externa ainda em validação
+- **Scan QR por câmera** — importação de PSBT diretamente pela webcam
+- **Interface dark Bitcoin** — laranja `#F7931A`, fundo `#0A0A0A`, tipografia monospace
+- **Bilinguismo** — Português (pt_BR) e Inglês (en_US) alternaveis em tempo real
+- **Hardening de rede** — Wi-Fi e Bluetooth desabilitados, `nftables` drop-all
+- **Bootável via pendrive** — live Debian Bookworm, openbox kiosk, autologin
+- **176 testes automatizados** — ruff, mypy e pytest na validação local e no CI, 0 warnings
+
+---
+
+## Modelo de Segurança
+
+![Modelo de Segurança — Air-gap](assets/diagrams/security-model.svg)
+
+O PhantOS implementa isolamento por air-gap: chaves privadas **nunca saem** do dispositivo offline. A comunicação com carteiras online ocorre exclusivamente por QR code ou arquivo USB.
+
+**Camadas de proteção:**
+
+| Proteção | Descrição |
+| --- | --- |
+| Seed em memória protegida | `bytearray` + `mlock()` — evita swap para disco |
+| Zeroização garantida | `zero_bytearray()` em bloco `finally` |
+| Gate de assinatura | Bloqueia se qualquer interface de rede estiver ativa |
+| Redação de logs | `safe_event()` remove termos sensíveis de todos os logs |
+| Patch embit v0.8.0 | 40+ vulnerabilidades corrigidas (A-01 a A-09, CRYPTO-01 a CRYPTO-09) |
+| SO endurecido | swap off, core dumps off, sysctl hardening, `/tmp` em tmpfs |
 
 ---
 
 ## Fluxo de Uso
+
+![Fluxo de uso](assets/diagrams/usage-flow.svg)
 
 1. **Gravar ISO no pendrive** — use `dd` ou Balena Etcher com a ISO gerada
 2. **Bootar o computador** pelo pendrive (F12/F2/Del para menu de boot)
@@ -67,6 +94,32 @@ PhantOS ColdWallet é uma carteira fria Bitcoin para uso offline, executada dire
 8. **Importar PSBT** para assinatura — via câmera ou arquivo USB
 9. **Revisar e assinar** — conferir valores, taxa e destinos antes de assinar
 10. **Exportar PSBT assinada** — base64 e UR `crypto-psbt` para transmissão pela carteira online
+
+---
+
+## Arquitetura
+
+![Arquitetura do projeto](assets/diagrams/architecture.svg)
+
+```text
+app/
+  descriptors/   — montagem de descriptors Bitcoin (BIP44/49/84/86)
+  i18n/          — internacionalização (pt_BR, en_US)
+  psbt/          — parse, revisão e assinatura de PSBT
+  qr/            — geração e leitura de QR (qrcode, zxing-cpp)
+  security/      — status offline, mlock, safe_event
+  ui/            — interface PySide6 (dark Bitcoin theme)
+  ur/            — UR encoding crypto-psbt (Foundation Devices)
+  wallet/        — núcleo BIP39/BIP32
+assets/
+  diagrams/      — architecture.svg · usage-flow.svg · security-model.svg
+  screenshots/   — capturas reais de todas as telas
+  logo/          — banner.gif
+docs/            — tutoriais, guias de integração, threat model
+scripts/         — build_iso.sh · write_usb.sh · harden_network.sh
+patches/         — embit-0.8.0-phantos-security.patch (40+ fixes)
+tests/           — 176 testes automatizados (0 warnings)
+```
 
 ---
 
@@ -87,6 +140,9 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -e ".[dev]"
+
+# Aplicar patch de segurança embit (obrigatório)
+bash scripts/apply_embit_patch.sh
 ```
 
 ### Executar a aplicação
@@ -119,7 +175,7 @@ sudo apt install live-build debootstrap xorriso grub-efi-amd64-bin grub-pc-bin d
 sudo bash scripts/build_iso.sh
 ```
 
-A ISO será gerada em `phantos-coldwallet-<versão>-amd64.iso` na raiz do repositório.
+A ISO será gerada como `phantos-coldwallet-1.0.0-amd64.iso` na raiz do repositório.
 
 > Consulte `docs/` para detalhes sobre personalização do ambiente live.
 
@@ -131,7 +187,8 @@ Substitua `/dev/sdX` pelo dispositivo correto (verifique com `lsblk`).
 
 ```bash
 sudo PHANTOS_CONFIRM_WIPE="CONFIRMO APAGAR ESTE DISPOSITIVO" \
-  bash scripts/write_usb.sh phantos-coldwallet-<versão>-amd64.iso /dev/sdX
+     PHANTOS_ISO_SHA256="<sha256 da iso>" \
+  bash scripts/write_usb.sh phantos-coldwallet-1.0.0-amd64.iso /dev/sdX
 ```
 
 Ou use [Balena Etcher](https://etcher.balena.io/) para uma interface gráfica.
@@ -140,47 +197,44 @@ Ou use [Balena Etcher](https://etcher.balena.io/) para uma interface gráfica.
 
 ## Compatibilidade
 
-| Carteira       | Status validado                              | Observação     |
-|----------------|----------------------------------------------|----------------|
-| Bitcoin Core   | PASS em regtest via Docker                   | PSBT roundtrip |
-| Sparrow Wallet | MANUAL REQUIRED                              | Descriptor/PSBT real pendente |
-| Electrum       | MANUAL REQUIRED                              | Import xpub/ypub/zpub pendente |
-| BlueWallet     | MANUAL REQUIRED                              | Fluxo mobile pendente |
-| Keystone/Passport/Specter | SKIPPED                         | UR externo ainda não validado |
-
----
-
-## Estrutura do Projeto
-
-```text
-app/
-  descriptors/   — montagem de descriptors Bitcoin
-  i18n/          — internacionalização inicial (en_US, pt_BR)
-  psbt/          — parse, revisão e assinatura de PSBT
-  qr/            — geração e leitura de QR
-  security/      — status offline e redação de eventos
-  ui/            — interface PySide6
-  ur/            — UR encoding (crypto-psbt)
-  wallet/        — núcleo BIP39/BIP32
-assets/          — logos, screenshots, diagramas
-docs/            — documentação técnica
-scripts/         — build ISO, hardening, desenvolvimento
-tests/           — testes automatizados
-```
+| Carteira | Status validado | Observação |
+| --- | --- | --- |
+| Bitcoin Core | PASS em regtest via Docker | PSBT roundtrip |
+| Sparrow Wallet | MANUAL REQUIRED | Descriptor/PSBT real pendente |
+| Electrum | MANUAL REQUIRED | Import xpub/ypub/zpub pendente |
+| BlueWallet | MANUAL REQUIRED | Fluxo mobile pendente |
+| Keystone/Passport/Specter | SKIPPED | UR externo ainda não validado |
 
 ---
 
 ## Stack Técnica
 
-| Componente  | Biblioteca                   |
-|-------------|------------------------------|
-| Interface   | PySide6 6.11.1               |
-| BIP32/BIP39 | embit                        |
-| Bitcoin     | btclib, python-bitcointx     |
-| QR          | qrcode, Pillow, zxing-cpp    |
-| UR encoding | urtypes                      |
-| Testes      | pytest                       |
-| Lint/tipos  | ruff, mypy                   |
+| Componente | Biblioteca |
+| --- | --- |
+| Interface | PySide6 6.11.1 |
+| BIP32/BIP39 | embit 0.8.0 (+ patch segurança) |
+| Bitcoin | btclib, python-bitcointx |
+| QR | qrcode, Pillow, zxing-cpp |
+| UR encoding | urtypes |
+| Testes | pytest |
+| Lint/tipos | ruff, mypy |
+
+---
+
+## CI/CD
+
+O projeto executa as seguintes verificações em cada push e pull request:
+
+| Job | Ferramenta | Descrição |
+| --- | --- | --- |
+| Lint | ruff | Formatação e análise estática Python |
+| Tipos | mypy | Verificação de tipos estáticos |
+| Testes | pytest 3.11/3.12 | 176 testes em matriz Python |
+| Shell | ShellCheck | Análise estática de scripts shell |
+| SAST | Bandit | Análise de segurança Python |
+| Deps | pip-audit | Auditoria de dependências |
+| Deps | OSV Scanner | Vulnerabilidades conhecidas |
+| Secrets | gitleaks | Detecção de segredos |
 
 ---
 

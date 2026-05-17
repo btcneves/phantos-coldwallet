@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="480" viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', 'Courier New', monospace">
+  <defs>
+    <style>
+      .bg { fill: #0A0A0A; }
+      .title { font-size: 18px; font-weight: bold; fill: #F7931A; }
+      .subtitle { font-size: 11px; fill: #666666; }
+      .cold-bg { fill: #0A1A0A; stroke: #00FF88; stroke-width: 2; }
+      .hot-bg  { fill: #1A0A0A; stroke: #FF4444; stroke-width: 2; }
+      .gap-bg  { fill: #0F0F0F; stroke: #F7931A; stroke-width: 2; stroke-dasharray: 6,4; }
+      .label-cold { font-size: 14px; fill: #00FF88; font-weight: bold; }
+      .label-hot  { font-size: 14px; fill: #FF4444; font-weight: bold; }
+      .label-gap  { font-size: 13px; fill: #F7931A; font-weight: bold; }
+      .item { font-size: 11px; fill: #CCCCCC; }
+      .item-ok { font-size: 11px; fill: #00FF88; }
+      .item-warn { font-size: 11px; fill: #FFCC00; }
+      .item-bad  { font-size: 11px; fill: #FF4444; }
+      .arrow-qr { stroke: #F7931A; stroke-width: 2.5; fill: none; marker-end: url(#arr-o); }
+      .arrow-bi { stroke: #F7931A; stroke-width: 2.5; fill: none; marker-start: url(#arr-os); marker-end: url(#arr-o); }
+      .section { font-size: 10px; fill: #444444; font-weight: bold; }
+    </style>
+    <marker id="arr-o" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#F7931A"/>
+    </marker>
+    <marker id="arr-os" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto-start-reverse">
+      <path d="M0,0 L0,6 L8,3 z" fill="#F7931A"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="480" class="bg"/>
+
+  <!-- Title -->
+  <text x="450" y="34" text-anchor="middle" class="title">₿  PhantOS ColdWallet — Modelo de Segurança</text>
+  <text x="450" y="52" text-anchor="middle" class="subtitle">Air-gap: separação física entre chaves privadas e internet</text>
+
+  <!-- ── COLD SIDE ── -->
+  <rect x="20" y="70" width="280" height="380" rx="12" class="cold-bg"/>
+  <text x="160" y="100" text-anchor="middle" class="label-cold">COLD WALLET</text>
+  <text x="160" y="118" text-anchor="middle" class="section">OFFLINE — sem rede</text>
+
+  <!-- Cold items -->
+  <text x="40" y="148" class="item-ok">✓  Debian Bookworm live ISO</text>
+  <text x="40" y="167" class="item-ok">✓  Boot via pendrive USB</text>
+  <text x="40" y="186" class="item-ok">✓  nftables drop-all (todo tráfego)</text>
+  <text x="40" y="205" class="item-ok">✓  rfkill Wi-Fi e Bluetooth</text>
+  <text x="40" y="224" class="item-ok">✓  Swap desativado</text>
+  <text x="40" y="243" class="item-ok">✓  Core dumps bloqueados</text>
+  <text x="40" y="262" class="item-ok">✓  sysctl hardening</text>
+  <text x="40" y="281" class="item-ok">✓  /tmp em tmpfs (RAM)</text>
+  <text x="40" y="300" class="item-ok">✓  Seed em bytearray + mlock</text>
+  <text x="40" y="319" class="item-ok">✓  Zeroização após uso</text>
+  <text x="40" y="338" class="item-ok">✓  Patch embit 40+ fixes</text>
+  <text x="40" y="357" class="item-ok">✓  Gate assinar: offline obrigatório</text>
+  <text x="40" y="376" class="item-warn">⚠  safe_event() redige logs</text>
+  <text x="40" y="395" class="item-warn">⚠  mlock: best-effort (sem root)</text>
+  <text x="40" y="414" class="item">   PhantOS v1.0.0 · 176 testes</text>
+  <text x="40" y="433" class="item">   Python 3.12 · embit 0.8.0</text>
+
+  <!-- ── AIR GAP CHANNEL ── -->
+  <rect x="320" y="130" width="260" height="250" rx="10" class="gap-bg"/>
+  <text x="450" y="158" text-anchor="middle" class="label-gap">AIR GAP</text>
+  <text x="450" y="178" text-anchor="middle" class="section">ÚNICO CANAL DE DADOS PERMITIDO</text>
+
+  <!-- QR Up (watch-only export) -->
+  <text x="450" y="212" text-anchor="middle" class="item" fill="#F7931A">── descriptor / xpub ──►</text>
+  <text x="450" y="228" text-anchor="middle" class="section">QR estático (zpub / descriptor)</text>
+  <text x="450" y="243" text-anchor="middle" class="section">ou arquivo em pendrive USB</text>
+
+  <line x1="380" y1="258" x2="520" y2="258" stroke="#333333" stroke-width="1"/>
+
+  <!-- QR Down (PSBT unsigned) -->
+  <text x="450" y="280" text-anchor="middle" class="item" fill="#4488FF">◄── PSBT não assinada ──</text>
+  <text x="450" y="296" text-anchor="middle" class="section">QR animado UR crypto-psbt</text>
+  <text x="450" y="311" text-anchor="middle" class="section">base64 · hex · arquivo USB</text>
+
+  <line x1="380" y1="322" x2="520" y2="322" stroke="#333333" stroke-width="1"/>
+
+  <!-- QR Up (PSBT signed) -->
+  <text x="450" y="344" text-anchor="middle" class="item" fill="#00FF88">── PSBT assinada ──────►</text>
+  <text x="450" y="360" text-anchor="middle" class="section">QR animado fountain codes</text>
+  <text x="450" y="375" text-anchor="middle" class="section">UR multipart · base64</text>
+
+  <!-- PROIBIDO -->
+  <text x="450" y="420" text-anchor="middle" class="item-bad">✗  rede · Wi-Fi · Bluetooth</text>
+  <text x="450" y="437" text-anchor="middle" class="item-bad">✗  USB storage (escrita em disco)</text>
+  <text x="450" y="454" text-anchor="middle" class="item-bad">✗  qualquer saída de rede</text>
+
+  <!-- ── HOT SIDE ── -->
+  <rect x="600" y="70" width="280" height="380" rx="12" class="hot-bg"/>
+  <text x="740" y="100" text-anchor="middle" class="label-hot">HOT WALLET</text>
+  <text x="740" y="118" text-anchor="middle" class="section">ONLINE — com internet</text>
+
+  <text x="620" y="148" class="item">   Sparrow Wallet</text>
+  <text x="620" y="167" class="item">   Electrum</text>
+  <text x="620" y="186" class="item">   BlueWallet</text>
+  <text x="620" y="205" class="item">   Bitcoin Core</text>
+  <text x="620" y="224" class="section">   ─────────────────────</text>
+  <text x="620" y="243" class="item">   importa descriptor/xpub</text>
+  <text x="620" y="262" class="item">   monitora blockchain</text>
+  <text x="620" y="281" class="item">   gera endereços de recebimento</text>
+  <text x="620" y="300" class="item">   constrói transação (PSBT)</text>
+  <text x="620" y="319" class="item">   exporta PSBT não assinada</text>
+  <text x="620" y="338" class="section">   ─────────────────────</text>
+  <text x="620" y="357" class="item">   recebe PSBT assinada</text>
+  <text x="620" y="376" class="item">   finaliza e transmite (broadcast)</text>
+  <text x="620" y="395" class="section">   ─────────────────────</text>
+  <text x="620" y="414" class="item-bad">✗  NUNCA vê chave privada</text>
+  <text x="620" y="433" class="item-bad">✗  NUNCA vê seed/mnemônico</text>
+  <text x="620" y="452" class="item-warn">⚠  pode ser comprometida</text>
+</svg>

@@ -47,7 +47,7 @@ pythonpath = ["."]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-exclude = ["app/ur/vendor"]
+exclude = ["app/ur/vendor", "scripts/capture_screenshots.py"]
 
 [tool.mypy]
 python_version = "3.12"
