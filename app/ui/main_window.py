@@ -27,7 +27,13 @@ from app.security import current_offline_status, safe_event
 from app.ui.bitcoin_rain import BitcoinRainWidget
 from app.ui.bip39_input import Bip39SeedWidget
 from app.ui.camera_dialog import CameraDialog
-from app.ui.dialogs import file_open_dialog, msg_critical, msg_information, msg_question, msg_warning
+from app.ui.dialogs import (
+    file_open_dialog,
+    msg_critical,
+    msg_information,
+    msg_question,
+    msg_warning,
+)
 from app.ui.qr_dialog import AnimatedQRDialog, QRDisplayDialog
 from app.ur import encode_crypto_psbt_ur_parts
 from app.wallet.core import (
@@ -431,13 +437,19 @@ class MainWindow(QMainWindow):
                 self.psbt_edit.setPlainText(text.strip())
             self._show_psbt_review()
         except Exception as exc:
-            msg_warning(self, tr("msg.qr_scanned.title"), tr("msg.qr_scanned.body", exc=exc, text=text[:200]))
+            msg_warning(
+                self,
+                tr("msg.qr_scanned.title"),
+                tr("msg.qr_scanned.body", exc=exc, text=text[:200]),
+            )
 
     # ------------------------------------------------------------------
     # PSBT actions
 
     def load_psbt_file(self) -> None:
-        path, _ = file_open_dialog(self, tr("dlg.load_psbt"), str(Path.home()), tr("dlg.psbt_filter"))
+        path, _ = file_open_dialog(
+            self, tr("dlg.load_psbt"), str(Path.home()), tr("dlg.psbt_filter")
+        )
         if not path:
             return
         data = Path(path).read_bytes()
@@ -464,7 +476,9 @@ class MainWindow(QMainWindow):
             if offline.suspicious_services:
                 issues.append(tr("iss.services") + ", ".join(offline.suspicious_services))
             detail = "\n".join(f"  • {i}" for i in issues) or f"  • {tr('iss.status_unverified')}"
-            msg_critical(self, tr("msg.signing_blocked.title"), tr("msg.signing_blocked.body", detail=detail))
+            msg_critical(
+                self, tr("msg.signing_blocked.title"), tr("msg.signing_blocked.body", detail=detail)
+            )
             return
         if self.ctx is None:
             self.restore_wallet()

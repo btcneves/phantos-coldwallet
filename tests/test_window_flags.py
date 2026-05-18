@@ -42,14 +42,13 @@ def _flags(widget) -> Qt.WindowType:
 def _assert_frameless(widget, name: str) -> None:
     flags = _flags(widget)
     assert flags & _MUST_HAVE, f"{name}: FramelessWindowHint ausente (flags={flags!r})"
-    assert not (flags & _MUST_NOT_HAVE), (
-        f"{name}: decoração de janela presente (flags={flags!r})"
-    )
+    assert not (flags & _MUST_NOT_HAVE), f"{name}: decoração de janela presente (flags={flags!r})"
 
 
 # ---------------------------------------------------------------------------
 # QRDisplayDialog
 # ---------------------------------------------------------------------------
+
 
 class TestQRDisplayDialog:
     def test_frameless(self) -> None:
@@ -71,6 +70,7 @@ class TestQRDisplayDialog:
 # AnimatedQRDialog
 # ---------------------------------------------------------------------------
 
+
 class TestAnimatedQRDialog:
     def test_frameless(self) -> None:
         from app.ui.qr_dialog import AnimatedQRDialog
@@ -91,6 +91,7 @@ class TestAnimatedQRDialog:
 # CameraDialog
 # ---------------------------------------------------------------------------
 
+
 class TestCameraDialog:
     def test_flags_close_only(self) -> None:
         from app.ui.camera_dialog import CameraDialog
@@ -110,6 +111,7 @@ class TestCameraDialog:
 # ---------------------------------------------------------------------------
 # Wrappers QMessageBox (dialogs.py)
 # ---------------------------------------------------------------------------
+
 
 class TestDialogWrappers:
     """Verifica que os wrappers criam dialogs com flags corretas sem exibi-los."""
