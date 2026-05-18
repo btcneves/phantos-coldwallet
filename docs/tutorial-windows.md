@@ -23,7 +23,13 @@ e inicia o computador por ele. O Windows do computador não é alterado.
 Get-FileHash .\phantos-coldwallet-<versao>-amd64.iso -Algorithm SHA256
 ```
 
-Compare o hash exibido com o publicado no release. Se forem idênticos, a ISO é autêntica.
+Compare o hash exibido com o publicado no release. Para a v1.0.0, o valor esperado é:
+
+```text
+SHA256: 58b3abf4a772f4311e34d028fc45f43bb713923d88cbe5224caa35c7bd0b7040
+```
+
+Se forem idênticos, a ISO é autêntica.
 
 ---
 

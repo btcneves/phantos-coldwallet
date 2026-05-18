@@ -31,6 +31,13 @@ Verifique a integridade antes de prosseguir:
 sha256sum -c phantos-coldwallet-1.0.0-amd64.iso.sha256
 ```
 
+Hashes esperados para a v1.0.0:
+
+```text
+SHA256: 58b3abf4a772f4311e34d028fc45f43bb713923d88cbe5224caa35c7bd0b7040
+SHA512: 406f5c13557381a2220192802ee18709bebc2f9c43a5689b074e7c4189d3dd2694afd2f9fa21578d4cf1285b4e8c2f1e65efe15db58b54b04fb111309d48f9b4
+```
+
 ### Opção B: Gerar a ISO localmente
 
 Consulte o guia completo em [build-iso.md](build-iso.md). Resumo rápido para Ubuntu/Debian:

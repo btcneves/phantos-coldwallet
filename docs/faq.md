@@ -60,10 +60,25 @@ computador com um pendrive, sem custo adicional de hardware.
 - **Assinar transações** — importar PSBT via câmera ou arquivo, revisar e assinar
 - **Exportar PSBT assinada** — QR animado UR `crypto-psbt` para transmissão
 
+## Por que não há barra de título nas janelas?
+
+Por design de segurança e estabilidade no ambiente kiosk do pendrive bootável.
+
+O PhantOS roda em openbox configurado como kiosk, onde decorações de janela
+(barra de título, botões de minimizar/maximizar) causam comportamentos
+imprevisíveis e podem expor controles operáveis por outros processos.
+
+Todas as janelas — incluindo diálogos de QR, câmera e mensagens de sistema —
+aplicam `Qt.WindowType.FramelessWindowHint`, removendo a decoração
+completamente. O openbox reforça isso com `<decor>no</decor>` globalmente.
+
+Para fechar uma janela ou diálogo, use o botão correspondente dentro da própria
+interface (ex.: botão **Fechar**, **Cancelar** ou **OK**).
+
 ## Por que é v1.0.0 e não requer auditoria externa para uso?
 
-A v1.0.0 completou 4 rodadas de endurecimento interno (memória, rede, SO, CI) e 176 testes
-automatizados com 0 warnings. As principais proteções estão implementadas e validadas:
+A v1.0.0 completou 4 rodadas de endurecimento interno (memória, rede, SO, CI) e 188+
+testes automatizados. As principais proteções estão implementadas e validadas:
 
 - Isolamento de rede verificado em runtime (gate de assinatura)
 - Patch de segurança embit v0.8.0 (40+ vulnerabilidades corrigidas)

@@ -2,10 +2,11 @@
 
 ## Versões suportadas
 
-| Versão | Suporte de segurança |
-| ------ | -------------------- |
-| 0.2.x  | Sim, no branch de desenvolvimento beta |
-| 0.1.x  | Sim, para a release pública atual enquanto 0.2.x não for publicado |
+| Versão | Suporte de segurança          |
+| ------ | ----------------------------- |
+| 1.0.0  | Sim — release estável atual   |
+| 0.2.x  | Não — substituída por v1.0.0  |
+| 0.1.x  | Não — substituída por v1.0.0  |
 
 ## Reportando vulnerabilidades
 
@@ -48,12 +49,13 @@ Use um dos canais abaixo:
 
 ## Aviso importante
 
-O código de desenvolvimento 0.2.0 concluiu o ciclo de endurecimento interno: zeroização real de seed com
+A v1.0.0 concluiu quatro rodadas de auditoria de segurança interna: zeroização real de seed com
 `bytearray` + `mlock`, verificação offline real via `/sys/class/net` e `rfkill`,
-gate de assinatura no core, e hardening do SO na ISO (swap, core dumps, sysctl).
+gate de assinatura no core, hardening do SO na ISO (swap, core dumps, sysctl) e
+aplicação de 40+ patches no embit v0.8.0.
 
-O projeto **ainda não foi auditado externamente**. A v1.0.0 estável só será declarada
-após auditoria independente publicada. Evite valores que não pode perder até lá.
+O projeto **ainda não foi auditado externamente**. A auditoria independente está prevista
+antes da v2.0.0. Evite valores que não pode perder até a conclusão dessa auditoria.
 
 A segurança de uma cold wallet depende também do ambiente de execução (hardware,
 firmware, BIOS/UEFI, teclado, câmera). O PhantOS não pode garantir a integridade

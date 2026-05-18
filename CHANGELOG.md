@@ -7,9 +7,21 @@ A versão segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
-## [1.0.0] — 2026-05-17
+## [1.0.0] — 2026-05-18
 
 ### Adicionado
+
+#### Interface completamente frameless — PR #6
+
+- Todas as janelas e diálogos agora usam `FramelessWindowHint`: barra de título removida em
+  `MainWindow`, `QRDisplayDialog`, `AnimatedQRDialog` e `CameraDialog`
+- `app/ui/dialogs.py` — novo módulo com wrappers centralizados (`msg_warning`, `msg_critical`,
+  `msg_information`, `msg_question`, `file_open_dialog`) que aplicam flags frameless e centralizam
+  o dialog em relação à janela pai
+- Stylesheet global corrigido em `app/main.py` para eliminar fundos cinza do sistema operacional
+  em todos os diálogos Qt
+- `tests/test_window_flags.py` — 12 testes headless (offscreen) verificando `FramelessWindowHint`
+  e ausência de decorações de janela em todos os diálogos
 
 #### Auditoria de segurança interna — 4 rodadas
 
@@ -25,7 +37,10 @@ A versão segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Corrigido
 
-- Todos os 176 testes agora passam sem nenhum warning (0 warnings, down from 91)
+- Overflow do label "HOT WALLET" no diagrama SVG do modelo de segurança (`assets/diagrams/security-model.svg`)
+  corrigido — texto truncado e `viewBox` ajustado para acomodar o rótulo sem corte — PR #5
+- Patches do embit aplicados corretamente pelo `scripts/build_iso.sh` durante o build da ISO — PR #5
+- Todos os 188 testes agora passam sem nenhum warning (0 warnings, down from 91)
 - Fixtures PSBT em todos os arquivos de teste usam `non_witness_utxo` com txid correspondente,
   eliminando o UserWarning do embit sobre ausência de previous transaction (mitigação fee-drain)
 - Imports não utilizados removidos de `test_psbt_production.py`, `test_psbt_security.py`,

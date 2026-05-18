@@ -32,7 +32,7 @@ Passos para reproduzir o comportamento:
 
 ## Ambiente
 
-- **Versão do PhantOS ColdWallet:** (ex: v0.1.0 release ou v0.2.0-dev)
+- **Versão do PhantOS ColdWallet:** (ex: v1.0.0)
 - **Sistema operacional:** (ex: Debian 12, Ubuntu 24.04, ISO bootável)
 - **Python:** (ex: 3.12.3) — `python --version`
 - **PySide6:** (ex: 6.11.1) — `pip show PySide6`

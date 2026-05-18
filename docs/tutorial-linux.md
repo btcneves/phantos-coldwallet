@@ -24,6 +24,12 @@ sha256sum phantos-coldwallet-<versao>-amd64.iso
 # Compare com o hash publicado no release
 ```
 
+Para a v1.0.0, o hash esperado é:
+
+```text
+SHA256: 58b3abf4a772f4311e34d028fc45f43bb713923d88cbe5224caa35c7bd0b7040
+```
+
 ### Gravar no pendrive
 
 **Opção A — dd (linha de comando):**
