@@ -148,6 +148,168 @@ cat > config/includes.chroot/etc/xdg/openbox/autostart <<'EOF'
 /usr/local/bin/phantos-start &
 EOF
 
+# Tema openbox PhantOS — visual dark/Bitcoin coerente com o stylesheet Qt.
+# Flat design, sem gradientes, paleta idêntica à da aplicação.
+mkdir -p config/includes.chroot/usr/share/themes/PhantOS/openbox-3
+cat > config/includes.chroot/usr/share/themes/PhantOS/openbox-3/themerc <<'THEMERC'
+# PhantOS openbox theme - dark Bitcoin aesthetic
+
+# --- Title bar (active) ---
+window.active.title.bg:                     flat solid
+window.active.title.bg.color:              #0D0D0D
+window.active.label.bg:                    flat solid
+window.active.label.bg.color:             #0D0D0D
+window.active.label.text.color:           #F7931A
+
+# --- Title bar (inactive) ---
+window.inactive.title.bg:                   flat solid
+window.inactive.title.bg.color:            #111111
+window.inactive.label.bg:                   flat solid
+window.inactive.label.bg.color:           #111111
+window.inactive.label.text.color:         #4A4A4A
+
+# --- Client border color (strip between titlebar and content) ---
+window.active.client.color:               #F7931A
+window.inactive.client.color:             #2A1A00
+
+# --- Outer frame border ---
+window.active.border.color:               #F7931A
+window.inactive.border.color:             #2A1A00
+border.width:                             1
+
+# --- Close button (active, unpressed) ---
+window.active.button.close.unpressed.bg:          flat solid
+window.active.button.close.unpressed.bg.color:    #0D0D0D
+window.active.button.close.unpressed.image.color: #F7931A
+
+# --- Close button (active, hover) ---
+window.active.button.close.hover.bg:              flat solid
+window.active.button.close.hover.bg.color:        #F7931A
+window.active.button.close.hover.image.color:     #0A0A0A
+
+# --- Close button (active, pressed) ---
+window.active.button.close.pressed.bg:            flat solid
+window.active.button.close.pressed.bg.color:      #D4780D
+window.active.button.close.pressed.image.color:   #0A0A0A
+
+# --- Close button (inactive) ---
+window.inactive.button.close.unpressed.bg:          flat solid
+window.inactive.button.close.unpressed.bg.color:    #111111
+window.inactive.button.close.unpressed.image.color: #333333
+
+# --- Handle / grip - set to 0 to remove bottom bar entirely ---
+handle.width:                             0
+window.active.handle.bg:                  flat solid
+window.active.handle.bg.color:           #0D0D0D
+window.inactive.handle.bg:               flat solid
+window.inactive.handle.bg.color:         #111111
+window.active.grip.bg:                   flat solid
+window.active.grip.bg.color:            #0D0D0D
+window.inactive.grip.bg:                 flat solid
+window.inactive.grip.bg.color:          #111111
+
+# --- Geometry ---
+padding.width:                            6
+padding.height:                           4
+window.label.text.justify:               center
+THEMERC
+
+# rc.xml: kiosk — apenas botão fechar na barra de título de todas as janelas.
+# <titleLayout>C</titleLayout> remove minimize e maximize do openbox.
+# Sem este arquivo, o openbox ignora os WindowFlags do Qt e renderiza
+# min/max por conta própria, causando tela preta ao minimizar.
+cat > config/includes.chroot/etc/xdg/openbox/rc.xml <<'RCXML'
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc"
+                xmlns:xi="http://www.w3.org/2001/XInclude">
+  <resistance>
+    <strength>10</strength>
+    <screen_edge_strength>20</screen_edge_strength>
+  </resistance>
+  <focus>
+    <focusNew>yes</focusNew>
+    <followMouse>no</followMouse>
+    <focusLast>yes</focusLast>
+    <underMouse>no</underMouse>
+    <focusDelay>200</focusDelay>
+    <raiseOnFocus>no</raiseOnFocus>
+  </focus>
+  <theme>
+    <name>PhantOS</name>
+    <titleLayout>C</titleLayout>
+    <keepBorder>yes</keepBorder>
+    <animateIconify>no</animateIconify>
+    <font place="ActiveWindow">
+      <name>sans</name>
+      <size>10</size>
+      <weight>bold</weight>
+      <slant>normal</slant>
+    </font>
+  </theme>
+  <desktops>
+    <number>1</number>
+    <firstdesk>1</firstdesk>
+    <names><name>PhantOS</name></names>
+    <popupTime>0</popupTime>
+  </desktops>
+  <resize>
+    <drawContents>yes</drawContents>
+    <popupShow>NonPixel</popupShow>
+    <popupPosition>Center</popupPosition>
+  </resize>
+  <keyboard>
+    <chainQuitKey>C-g</chainQuitKey>
+    <!-- Alt+F4 fecha janela normalmente -->
+    <keybind key="A-F4">
+      <action name="Close"/>
+    </keybind>
+    <!-- Desativa atalhos de minimizar e maximizar -->
+    <keybind key="A-F9"><action name="Close"/></keybind>
+    <keybind key="A-F10"><action name="Close"/></keybind>
+  </keyboard>
+  <mouse>
+    <dragThreshold>1</dragThreshold>
+    <doubleClickTime>500</doubleClickTime>
+    <screenEdgeWarpTime>0</screenEdgeWarpTime>
+    <screenEdgeWarpMouse>false</screenEdgeWarpMouse>
+    <context name="Frame">
+      <mousebind button="A-Left" action="Press">
+        <action name="Focus"/>
+        <action name="Raise"/>
+      </mousebind>
+      <mousebind button="A-Left" action="Drag">
+        <action name="Move"/>
+      </mousebind>
+    </context>
+    <context name="Titlebar">
+      <mousebind button="Left" action="Drag">
+        <action name="Move"/>
+      </mousebind>
+      <mousebind button="Left" action="DoubleClick">
+        <action name="Focus"/>
+      </mousebind>
+    </context>
+    <context name="Close">
+      <mousebind button="Left" action="Click">
+        <action name="Close"/>
+      </mousebind>
+    </context>
+    <context name="Desktop">
+      <mousebind button="A-Up" action="Click">
+        <action name="GoToDesktop"><to>previous</to></action>
+      </mousebind>
+    </context>
+  </mouse>
+  <applications>
+    <application class="*">
+      <decor>no</decor>
+      <skip_taskbar>yes</skip_taskbar>
+      <skip_pager>yes</skip_pager>
+    </application>
+  </applications>
+</openbox_config>
+RCXML
+
 # Getty autologin — mais confiável que LightDM para kiosk live
 # (LightDM pode falhar ao resolver user-session + autologin em live systems)
 mkdir -p config/includes.chroot/etc/systemd/system/getty@tty1.service.d

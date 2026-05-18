@@ -6,7 +6,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QComboBox,
-    QFileDialog,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -28,6 +27,13 @@ from app.security import current_offline_status, safe_event
 from app.ui.bitcoin_rain import BitcoinRainWidget
 from app.ui.bip39_input import Bip39SeedWidget
 from app.ui.camera_dialog import CameraDialog
+from app.ui.dialogs import (
+    file_open_dialog,
+    msg_critical,
+    msg_information,
+    msg_question,
+    msg_warning,
+)
 from app.ui.qr_dialog import AnimatedQRDialog, QRDisplayDialog
 from app.ur import encode_crypto_psbt_ur_parts
 from app.wallet.core import (
@@ -55,6 +61,7 @@ class MainWindow(QMainWindow):
         self._subtitle_lbl: QLabel | None = None
         self._lang_btn: QPushButton | None = None
         self._form: QFormLayout | None = None
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
         self.setWindowTitle("PhantOS ColdWallet")
         self.setMinimumSize(1100, 780)
         self.setCentralWidget(self._build())
@@ -300,11 +307,7 @@ class MainWindow(QMainWindow):
         words = int(self.words_combo.currentText())
         mnemonic = generate_mnemonic(words)
         self.mnemonic_input.set_mnemonic(mnemonic)
-        QMessageBox.warning(
-            self,
-            tr("msg.write_down.title"),
-            tr("msg.write_down.body"),
-        )
+        msg_warning(self, tr("msg.write_down.title"), tr("msg.write_down.body"))
         self._load_context_from_fields(clear_inputs=False)
 
     def restore_wallet(self) -> None:
@@ -343,7 +346,7 @@ class MainWindow(QMainWindow):
             ]
             self.output.setPlainText("\n".join(lines))
         except Exception as exc:
-            QMessageBox.critical(self, tr("msg.restore_error.title"), safe_event(str(exc)))
+            msg_critical(self, tr("msg.restore_error.title"), safe_event(str(exc)))
 
     def closeEvent(self, event):  # noqa: N802
         self.lock_wallet()
@@ -356,11 +359,7 @@ class MainWindow(QMainWindow):
         self.passphrase_edit.clear()
         self.psbt_edit.clear()
         self.output.clear()
-        QMessageBox.information(
-            self,
-            tr("msg.locked.title"),
-            tr("msg.locked.body"),
-        )
+        msg_information(self, tr("msg.locked.title"), tr("msg.locked.body"))
 
     def recover_addresses(self) -> None:
         try:
@@ -385,7 +384,7 @@ class MainWindow(QMainWindow):
             lines.append(tr("out.recovery_warning"))
             self.output.setPlainText("\n".join(lines))
         except Exception as exc:
-            QMessageBox.critical(self, tr("msg.recovery_error.title"), safe_event(str(exc)))
+            msg_critical(self, tr("msg.recovery_error.title"), safe_event(str(exc)))
         finally:
             self.passphrase_edit.clear()
             # SYS-09: limpa o campo de seed após recover_addresses para não deixar
@@ -438,7 +437,7 @@ class MainWindow(QMainWindow):
                 self.psbt_edit.setPlainText(text.strip())
             self._show_psbt_review()
         except Exception as exc:
-            QMessageBox.warning(
+            msg_warning(
                 self,
                 tr("msg.qr_scanned.title"),
                 tr("msg.qr_scanned.body", exc=exc, text=text[:200]),
@@ -448,11 +447,8 @@ class MainWindow(QMainWindow):
     # PSBT actions
 
     def load_psbt_file(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self,
-            tr("dlg.load_psbt"),
-            str(Path.home()),
-            tr("dlg.psbt_filter"),
+        path, _ = file_open_dialog(
+            self, tr("dlg.load_psbt"), str(Path.home()), tr("dlg.psbt_filter")
         )
         if not path:
             return
@@ -462,7 +458,7 @@ class MainWindow(QMainWindow):
             self.psbt_edit.setPlainText(self.loaded_psbt.to_base64())
             self._show_psbt_review()
         except Exception as exc:
-            QMessageBox.critical(self, tr("msg.psbt_invalid.title"), str(exc))
+            msg_critical(self, tr("msg.psbt_invalid.title"), str(exc))
 
     def sign_transaction(self) -> None:
         offline = current_offline_status()
@@ -480,10 +476,8 @@ class MainWindow(QMainWindow):
             if offline.suspicious_services:
                 issues.append(tr("iss.services") + ", ".join(offline.suspicious_services))
             detail = "\n".join(f"  • {i}" for i in issues) or f"  • {tr('iss.status_unverified')}"
-            QMessageBox.critical(
-                self,
-                tr("msg.signing_blocked.title"),
-                tr("msg.signing_blocked.body", detail=detail),
+            msg_critical(
+                self, tr("msg.signing_blocked.title"), tr("msg.signing_blocked.body", detail=detail)
             )
             return
         if self.ctx is None:
@@ -495,11 +489,11 @@ class MainWindow(QMainWindow):
             review = review_psbt(self.loaded_psbt, self.ctx)
             if review.errors:
                 self._render_review(review)
-                QMessageBox.critical(self, tr("msg.cannot_sign.title"), "\n".join(review.errors))
+                msg_critical(self, tr("msg.cannot_sign.title"), "\n".join(review.errors))
                 return
             self._render_review(review)
             if any("PSBTv2" in w for w in review.warnings):
-                resp = QMessageBox.warning(
+                resp = msg_warning(
                     self,
                     tr("msg.psbtv2_warn.title"),
                     tr("msg.psbtv2_warn.body"),
@@ -508,7 +502,7 @@ class MainWindow(QMainWindow):
                 )
                 if resp != QMessageBox.StandardButton.Yes:
                     return
-            confirm = QMessageBox.question(
+            confirm = msg_question(
                 self,
                 tr("msg.confirm_sign.title"),
                 format_psbt_confirmation(review, self.ctx),
@@ -544,7 +538,7 @@ class MainWindow(QMainWindow):
             self.psbt_edit.clear()
             self.loaded_psbt = None
         except Exception as exc:
-            QMessageBox.critical(self, tr("msg.sign_failed.title"), str(exc))
+            msg_critical(self, tr("msg.sign_failed.title"), str(exc))
 
     # ------------------------------------------------------------------
     # Words / profile selection helpers
@@ -557,11 +551,7 @@ class MainWindow(QMainWindow):
 
     def _on_profile_changed(self) -> None:
         if self.profile_combo.currentData() == "bip86":
-            QMessageBox.warning(
-                self,
-                tr("msg.taproot_warn.title"),
-                tr("msg.taproot_warn.body"),
-            )
+            msg_warning(self, tr("msg.taproot_warn.title"), tr("msg.taproot_warn.body"))
 
     # ------------------------------------------------------------------
     # PSBT review helpers

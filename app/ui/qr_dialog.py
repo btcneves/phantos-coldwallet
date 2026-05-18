@@ -21,6 +21,7 @@ class QRDisplayDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setModal(True)
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -76,6 +77,7 @@ class AnimatedQRDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(title or tr("qr.animated.title"))
         self.setModal(True)
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self._pixmaps: list[QPixmap] = []
         self._current = 0
         self._prerender(ur_parts)
