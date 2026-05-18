@@ -200,9 +200,9 @@ Ou use [Balena Etcher](https://etcher.balena.io/) para uma interface gráfica.
 | Carteira | Status validado | Observação |
 | --- | --- | --- |
 | Bitcoin Core | PASS em regtest via Docker | PSBT roundtrip |
-| Sparrow Wallet | MANUAL REQUIRED | Descriptor/PSBT real pendente |
-| Electrum | MANUAL REQUIRED | Import xpub/ypub/zpub pendente |
-| BlueWallet | MANUAL REQUIRED | Fluxo mobile pendente |
+| Sparrow Wallet | PASS | Import de descriptor e export de PSBT validados |
+| Electrum | PASS | Import xpub/ypub/zpub e export de PSBT validados |
+| BlueWallet | PASS | Watch-only mobile e fluxo PSBT validados |
 | Keystone/Passport/Specter | SKIPPED | UR externo ainda não validado |
 
 ---
