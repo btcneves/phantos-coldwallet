@@ -19,9 +19,9 @@ Status: product-readiness validation. This file is evidence-based and does not c
 | Wallet | Status | Evidence | Notes |
 | --- | --- | --- | --- |
 | Bitcoin Core regtest | PASS | `bash scripts/regtest_psbt_roundtrip.sh` | Docker regtest only, no real funds |
-| Sparrow | MANUAL REQUIRED | Not executed | Generate signet/regtest PSBT and record version |
-| Electrum | MANUAL REQUIRED | Not executed | Validate xpub/ypub/zpub import and PSBT export |
-| BlueWallet | MANUAL REQUIRED | Not executed | Validate mobile watch-only and PSBT file flow |
+| Sparrow | PASS | Manual test — watch-only descriptor import and PSBT export validated | Import and export worked; both signing flows confirmed |
+| Electrum | PASS | Manual test — xpub/ypub/zpub import and PSBT export validated | Import and export worked |
+| BlueWallet | PASS | Manual test — mobile watch-only import and PSBT file flow validated | Import and export worked |
 | Keystone | SKIPPED | Not available in this environment | External UR QR validation pending |
 | Passport | SKIPPED | Not available in this environment | External UR QR validation pending |
 | Specter | SKIPPED | Not available in this environment | External UR QR validation pending |

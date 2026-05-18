@@ -33,7 +33,7 @@ Valores de status: PASS, FAIL, SKIPPED, MANUAL REQUIRED, PARTIAL.
 | Wallet | Exportação watch-only | `python scripts/validate_wallet_flow.py` | `.venv` local | Exportações omitem material privado | PASS | Descriptors e variantes xpub |
 | PSBT | Fixtures de segurança | `pytest tests/test_psbt_security.py` | `.venv` local | UTXO ausente, fee negativa, path errado, prevout duplicado, script mismatch, dust cobertos | PASS | Sintéticos e determinísticos |
 | PSBT | Roundtrip Bitcoin Core regtest | `scripts/regtest_psbt_roundtrip.sh` | Docker, regtest | PSBT assinada, finalizada e transmitida em regtest | PASS | Apenas fundos regtest |
-| PSBT | Fixtures Sparrow/Electrum/BlueWallet | Wallets externas em mainnet/signet | Não executado | Sem fixtures reais produzidos | MANUAL REQUIRED | Ver `PSBT_COMPATIBILITY.md` antes de claims de compatibilidade |
+| PSBT | Interoperabilidade Sparrow/Electrum/BlueWallet | Wallets externas — testes manuais | Execução manual | Import e export validados com sucesso nas três carteiras | PASS | Ver `PSBT_COMPATIBILITY.md` |
 | UR/QR | Robustez UR multipart | `pytest tests/test_ur.py` | `.venv` local | Embaralhados, duplicados, ausentes, mistos e corrompidos cobertos | PASS | |
 | UR/QR | QR estático encode/decode | `pytest tests/test_qr.py` | `.venv` local | Coberto pela suite | PASS | |
 | UI | Resumo de revisão de assinatura | `pytest tests/test_ui_review.py` | `.venv` local | Fingerprint, perfil, paths, saídas, troco e taxa presentes | PASS | Lógica Qt-free |
@@ -56,10 +56,9 @@ Valores de status: PASS, FAIL, SKIPPED, MANUAL REQUIRED, PARTIAL.
 
 ## Pendências antes de release público
 
-1. Produzir fixtures reais de Sparrow, Electrum e BlueWallet em regtest ou signet e registrar resultado em `PSBT_COMPATIBILITY.md`.
-2. Configurar chave de release GPG e gerar `SHA256SUMS.asc` antes de publicar artefatos.
-3. Realizar gravação física de USB com confirmação explícita do operador e verificar checksum pós-gravação.
-4. Conduzir auditoria externa independente antes de declarar suporte a valores significativos.
+1. Configurar chave de release GPG e gerar `SHA256SUMS.asc` antes de publicar artefatos.
+2. Realizar gravação física de USB com confirmação explícita do operador e verificar checksum pós-gravação.
+3. Conduzir auditoria externa independente antes de declarar suporte a valores significativos.
 
 ---
 

@@ -92,8 +92,7 @@ sudo /usr/local/bin/phantos-verify-live-hardening
 
 ## Itens Abertos Pós-v1.0.0
 
-- Fixtures reais em regtest/signet para Sparrow, Electrum e BlueWallet (validação cruzada manual).
-- Verificação manual documentada de import/export com cada carteira.
+- Sparrow, Electrum e BlueWallet: import e export validados manualmente — concluído.
 - Release assinado com chave pública publicada e verificável.
 - SBOM anexado a cada release.
 - Teste de boot BIOS/UEFI em QEMU no mesmo artefato do release e em hardware real.
