@@ -213,19 +213,50 @@ def _stylesheet() -> str:
     /* ── QR & Camera dialogs ── */
     QDialog {
         background: #0A0A0A;
+        border: 1px solid #2A2000;
     }
     QDialog QLabel {
+        background: transparent;
         color: #E8E0D0;
+    }
+    QDialog QWidget {
+        background: #0A0A0A;
     }
 
     /* ── Message boxes ── */
     QMessageBox {
         background: #0D0F12;
+        border: 1px solid #F7931A;
+    }
+    QMessageBox QWidget {
+        background: #0D0F12;
     }
     QMessageBox QLabel {
+        background: transparent;
         color: #E8E0D0;
         font-size: 14px;
-        line-height: 1.5;
+    }
+    QMessageBox QAbstractButton {
+        background: #1A1200;
+        color: #F7931A;
+        border: 1px solid #F7931A;
+        border-radius: 4px;
+        padding: 6px 20px;
+        font-weight: 700;
+        min-width: 72px;
+    }
+    QMessageBox QAbstractButton:hover {
+        background: #F7931A;
+        color: #000000;
+    }
+    QMessageBox QAbstractButton:pressed {
+        background: #D4780D;
+        color: #000000;
+    }
+
+    /* ── QDialogButtonBox inside any dialog ── */
+    QDialogButtonBox {
+        background: transparent;
     }
     """
 

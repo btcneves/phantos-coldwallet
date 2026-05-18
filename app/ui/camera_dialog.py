@@ -31,6 +31,7 @@ class CameraDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(tr("cam.title"))
         self.setModal(True)
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self._camera: "QCamera | None" = None
         self._session: "QMediaCaptureSession | None" = None
         self._sink: "QVideoSink | None" = None
