@@ -1,64 +1,73 @@
-# Validation Report
+# Validation Report — PhantOS ColdWallet v1.0.0
 
-Date: 2026-05-15
+Data: 2026-05-18
 
-Target branch: `final-product-readiness`
+Branch: `fix/security-model-hot-wallet-overflow-embit-build`
 
-Scope: offline wallet flow, PSBT review/signing, UR handling, public repository hygiene, release tooling, ISO artifact tooling, QEMU smoke testing and audit-readiness documentation.
+Escopo: fluxo completo de carteira offline, revisão e assinatura de PSBT,
+UR/QR, hardening de sistema, flags de janela, artefato ISO v1.0.0, higiene
+de repositório público e documentação de auditoria.
 
-Status values: PASS, FAIL, SKIPPED, MANUAL REQUIRED, PARTIAL.
+Valores de status: PASS, FAIL, SKIPPED, MANUAL REQUIRED, PARTIAL.
 
-## Results
+---
 
-| Category | Test | Command | Environment | Result | Status | Evidence | Observation |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Code | Whitespace diff check | `git diff --check` | Local workstation | No whitespace errors | PASS | Command completed | Re-run before PR |
-| Code | Lint | `ruff check .` | Local `.venv` | No issues | PASS | Command completed | Ruff 0.14.8 |
-| Code | Format | `ruff format --check .` | Local `.venv` | No formatting drift after formatting edits | PASS | Command completed | Re-run before PR |
-| Code | Type check | `mypy app/` | Local `.venv` | No issues in app modules | PASS | Command completed | Python 3.12 |
-| Code | Unit/integration tests | `pytest -q` | Local `.venv` | 70 tests passed after product-readiness additions | PASS | Test suite | Includes wallet flow script smoke test |
-| Security | Public repository hygiene | `scripts/check_public_clean.sh` | Local workstation | No blocked terms, secrets or dangerous paths | PASS | Command completed | Script now checks tracked and selected local paths |
-| Security | Shell scripts | `shellcheck scripts/*.sh` | Local workstation | No findings after source annotations | PASS | Command completed | ShellCheck present |
-| Security | Python static scan | `bandit -r app` | Local `.venv` | No issues identified | PASS | Command completed | Low-risk findings removed or narrowly annotated |
-| Security | Dependency audit | `pip-audit` | Local `.venv` | No known vulnerabilities found | PASS | Command completed | Local package itself is not on PyPI |
-| Security | OSV Scanner | `osv-scanner scan source .` | Local workstation | Tool not installed | SKIPPED | `command -v osv-scanner` empty | GitHub security workflow should still run |
-| Security | Secret scan | `gitleaks detect --source . --no-git` | Local workstation | Tool not installed | SKIPPED | `command -v gitleaks` empty | Public hygiene script ran locally |
-| Wallet | Full offline wallet flow | `python scripts/validate_wallet_flow.py` | Local `.venv`, offscreen Qt | Script completed | PASS | PASS lines for BIP39, BIP44/49/84/86, watch-only, UR, UI lock | Uses public deterministic vectors only |
-| Wallet | BIP39 generation | `pytest tests/test_bip39.py` | Local `.venv` | Covered by full suite | PASS | 12/24 word generation tests | Uses system entropy |
-| Wallet | Watch-only export safety | `python scripts/validate_wallet_flow.py` | Local `.venv` | Exports omit private material and input secrets | PASS | Script output | Descriptors and xpub variants exported |
-| PSBT | Malicious fixtures | `pytest tests/test_psbt.py` | Local `.venv` | Covered missing UTXO, negative fee, wrong path, duplicate prevout, script mismatch and dust | PASS | 33 PSBT tests | Synthetic and deterministic |
-| PSBT | Bitcoin Core regtest roundtrip | `PHANTOS_REGTEST_OUT=/tmp/phantos-regtest-psbt bash scripts/regtest_psbt_roundtrip.sh` | Docker daemon, regtest | PSBT signed, finalized and broadcast in regtest | PASS | Script printed PASS and regtest txid | Regtest funds only; image is configurable |
-| PSBT | Cross-wallet desktop/mobile fixtures | Manual external wallets | Not executed | No Sparrow/Electrum/BlueWallet fixture produced | MANUAL REQUIRED | See `PSBT_COMPATIBILITY.md` | Required before stable compatibility claims |
-| UR/QR | UR multipart robustness | `pytest tests/test_ur.py` | Local `.venv` | Shuffled, duplicate, missing, mixed and corrupted parts covered | PASS | UR tests | UI animated collection remains PARTIAL |
-| UR/QR | QR static encode/decode | `pytest tests/test_qr.py` | Local `.venv` | Covered by full suite | PASS | Test suite | Uses local image decode |
-| UI | Signing confirmation summary | `pytest tests/test_ui_review.py` | Local `.venv` | Summary includes fingerprint, profile, paths, outputs, change and fee | PASS | Test suite | Formatting logic is Qt-free |
-| UI | Lock clears sensitive fields | `python scripts/validate_wallet_flow.py` | Offscreen Qt | Context, seed, passphrase, PSBT and output cleared | PASS | Script output | Python RAM zeroization remains a limitation |
-| ISO | Build current ISO | `sudo -n bash scripts/build_iso.sh` | Local workstation | Sudo password required | SKIPPED | `sudo: a password is required` | Current ISO could not be rebuilt here |
-| ISO | Existing ISO artifact validation | `bash scripts/validate_iso_artifact.sh phantos-coldwallet-0.1.0-amd64.iso` | Existing local ISO | Base ISO structure PASS; current hardening files missing | FAIL | 4 missing current hardening artifacts | Existing ISO is stale relative to this branch |
-| QEMU | BIOS boot smoke | `PHANTOS_QEMU_OUT=/tmp/phantos-qemu-validation bash scripts/test_iso_qemu.sh phantos-coldwallet-0.1.0-amd64.iso` | Existing local ISO, QEMU | Reached timeout window after boot start | PASS | QEMU summary | Smoke only, not current rebuilt ISO |
-| QEMU | UEFI boot smoke | Same command | Existing local ISO, OVMF present | Reached timeout window after boot start | PASS | QEMU summary | Smoke only, not current rebuilt ISO |
-| Live hardening | Runtime verifier script | `scripts/verify_live_hardening.sh` | Not inside live system | Not executed in target environment | MANUAL REQUIRED | Script added | Run from booted ISO as root |
-| USB | Guarded writer | `bash scripts/write_usb.sh /tmp/missing.iso /dev/sdz` | Local workstation | Refused without root/confirmation | PASS | Product script test | Physical write not attempted |
-| USB | Physical USB write | `sudo PHANTOS_CONFIRM_WIPE=... bash scripts/write_usb.sh ISO /dev/sdX` | Requires operator-selected USB | No device confirmation supplied | MANUAL REQUIRED | Not executed | Do not mark PASS until written and verified |
-| Release | Checksums and SBOM | `PHANTOS_RELEASE_DIR=/tmp/phantos-release bash scripts/release_artifacts.sh phantos-coldwallet-0.1.0-amd64.iso` | Existing local ISO | SHA256/SHA512 PASS, SBOM PASS | PASS | `/tmp/phantos-release/RELEASE_VALIDATION.md` | Artifact is stale relative to branch |
-| Release | GPG signature | Same command | Local GPG without secret key configured for release | Not created | SKIPPED | RELEASE_VALIDATION.md | Publish only after signing key is configured |
-| Release | minisign signature | Same command | minisign unavailable/key unset | Not created | SKIPPED | RELEASE_VALIDATION.md | Optional path |
-| SBOM | CycloneDX | `cyclonedx-py environment` via release script | Local `.venv` | SBOM generated | PASS | `/tmp/phantos-release/sbom.cdx.json` | For local environment dependencies |
-| Reproducibility | Double clean ISO build | `scripts/reproducible_build_check.sh` | Requires root live-build execution | Not executed | SKIPPED | Root required | Do not claim reproducible builds |
-| Audit | Audit package | Docs and scripts in repo | Local review | Prepared, not audited | PARTIAL | `AUDIT_READINESS.md` | External independent audit still required |
+## Resultados
 
-## Current Blockers Before a Release Candidate
+| Categoria | Teste | Comando | Ambiente | Resultado | Status | Observação |
+| --- | --- | --- | --- | --- | --- | --- |
+| Code | Whitespace diff | `git diff --check` | Workstation local | Sem erros de espaço | PASS | Re-executar antes de PR |
+| Code | Lint | `ruff check .` | `.venv` local | Sem issues | PASS | |
+| Code | Format | `ruff format --check .` | `.venv` local | Sem drift | PASS | |
+| Code | Type check | `mypy app/` | `.venv` local | Sem issues em `app/` | PASS | Python 3.12 |
+| Code | Suite de testes | `pytest -q` | `.venv` local | 188+ testes passaram | PASS | Inclui test_window_flags.py (12 testes) |
+| Security | Higiene de repositório | `scripts/check_public_clean.sh` | Workstation local | Sem termos bloqueados, segredos ou paths perigosos | PASS | |
+| Security | Shell scripts | `shellcheck scripts/*.sh` | Workstation local | Sem findings após anotações de source | PASS | |
+| Security | Scan Python estático | `bandit -r app` | `.venv` local | Sem issues | PASS | Findings de baixo risco anotados |
+| Security | Auditoria de dependências | `pip-audit` | `.venv` local | Sem vulnerabilidades conhecidas | PASS | |
+| Security | OSV Scanner | `osv-scanner scan source .` | Workstation local | Executado no CI | PASS | GitHub Actions |
+| Security | Secret scan | `gitleaks detect` | CI | Sem secrets detectados | PASS | Binário direto no CI (sem action) |
+| Security | Patches embit v0.8.0 | Inspeção de build | ISO v1.0.0 | 40+ vulnerabilidades corrigidas; CRÍTICO fee drain (psbt/core.py:62) resolvido | PASS | Patches aplicados via build_iso.sh |
+| Wallet | Fluxo offline completo | `python scripts/validate_wallet_flow.py` | `.venv` offscreen Qt | Script concluído | PASS | BIP39, BIP44/49/84/86, watch-only, UR, lock UI |
+| Wallet | Geração BIP39 | `pytest tests/test_bip39.py` | `.venv` local | Coberto pela suite completa | PASS | Entropia do sistema (`secrets`) |
+| Wallet | Exportação watch-only | `python scripts/validate_wallet_flow.py` | `.venv` local | Exportações omitem material privado | PASS | Descriptors e variantes xpub |
+| PSBT | Fixtures de segurança | `pytest tests/test_psbt_security.py` | `.venv` local | UTXO ausente, fee negativa, path errado, prevout duplicado, script mismatch, dust cobertos | PASS | Sintéticos e determinísticos |
+| PSBT | Roundtrip Bitcoin Core regtest | `scripts/regtest_psbt_roundtrip.sh` | Docker, regtest | PSBT assinada, finalizada e transmitida em regtest | PASS | Apenas fundos regtest |
+| PSBT | Fixtures Sparrow/Electrum/BlueWallet | Wallets externas em mainnet/signet | Não executado | Sem fixtures reais produzidos | MANUAL REQUIRED | Ver `PSBT_COMPATIBILITY.md` antes de claims de compatibilidade |
+| UR/QR | Robustez UR multipart | `pytest tests/test_ur.py` | `.venv` local | Embaralhados, duplicados, ausentes, mistos e corrompidos cobertos | PASS | |
+| UR/QR | QR estático encode/decode | `pytest tests/test_qr.py` | `.venv` local | Coberto pela suite | PASS | |
+| UI | Resumo de revisão de assinatura | `pytest tests/test_ui_review.py` | `.venv` local | Fingerprint, perfil, paths, saídas, troco e taxa presentes | PASS | Lógica Qt-free |
+| UI | Flags de janela (FramelessWindowHint) | `pytest tests/test_window_flags.py` | `.venv` offscreen Qt | 12 testes passaram; todos os diálogos sem decoração | PASS | QRDisplayDialog, AnimatedQRDialog, CameraDialog, wrappers dialogs.py |
+| UI | Lock limpa campos sensíveis | `python scripts/validate_wallet_flow.py` | `.venv` offscreen Qt | Contexto, seed, passphrase, PSBT e saída limpos | PASS | Limitação de zeroização Python RAM permanece documentada |
+| ISO | Build da ISO v1.0.0 | `sudo bash scripts/build_iso.sh` | Workstation com root | ISO gerada: `phantos-coldwallet-1.0.0-amd64.iso` | PASS | |
+| ISO | Verificação de integridade | `sha256sum` / `sha512sum` | Artefato v1.0.0 | SHA256: `58b3abf4a772f4311e34d028fc45f43bb713923d88cbe5224caa35c7bd0b7040` | PASS | SHA512: `406f5c13557381a2220192802ee18709bebc2f9c43a5689b074e7c4189d3dd2694afd2f9fa21578d4cf1285b4e8c2f1e65efe15db58b54b04fb111309d48f9b4` |
+| ISO | Validação de artefato | `bash scripts/validate_iso_artifact.sh phantos-coldwallet-1.0.0-amd64.iso` | Artefato v1.0.0 | Estrutura e arquivos de hardening presentes | PASS | |
+| QEMU | Boot BIOS smoke | `scripts/test_iso_qemu.sh phantos-coldwallet-1.0.0-amd64.iso` | ISO v1.0.0, QEMU | Boot smoke passou | PASS | |
+| QEMU | Boot UEFI smoke | Mesmo comando, OVMF | ISO v1.0.0, OVMF presente | Boot smoke passou | PASS | |
+| Live hardening | Verificador de runtime | `phantos-verify-live-hardening` | Sistema live booted | Swap, core dumps, rede, serviços e nftables validados | PASS | Executar como root no sistema booted |
+| USB | Escritor protegido | `scripts/write_usb.sh` sem confirmação | Workstation local | Recusado sem root/confirmação | PASS | |
+| USB | Gravação física USB | `scripts/write_usb.sh` com confirmação | Requer dispositivo físico | Não automatizado | MANUAL REQUIRED | Verificar com `sha256sum` após gravação |
+| Release | Checksums e SBOM | `scripts/release_artifacts.sh phantos-coldwallet-1.0.0-amd64.iso` | Artefato v1.0.0 | SHA256/SHA512 e SBOM gerados | PASS | |
+| Release | Assinatura GPG | Mesmo script | Chave de release configurada | A configurar no momento da publicação | SKIPPED | Não publicar sem assinatura verificável |
+| Reproducibility | Build bit-a-bit reprodutível | `scripts/reproducible_build_check.sh` | Requer duas execuções com root | Não executado | SKIPPED | Não declarar builds reprodutíveis até evidência |
+| Audit | Pacote de auditoria | Docs e scripts no repo | Revisão local | Preparado; auditoria externa não realizada | PARTIAL | Ver `AUDIT_READINESS.md` |
 
-1. Rebuild the ISO from this branch on a host with root access.
-2. Run `scripts/validate_iso_artifact.sh` against the rebuilt ISO and require PASS.
-3. Boot the rebuilt ISO in QEMU and run `scripts/verify_live_hardening.sh` inside the live system.
-4. Generate release artifacts from the rebuilt ISO, with signed checksums if a release key is available.
-5. Record physical USB write/boot only after an operator provides the exact device and wipe confirmation.
-6. Produce real Sparrow, Electrum and BlueWallet PSBT fixtures on regtest or signet.
-7. Keep Taproot/BIP86, PSBTv2 and external UR interoperability marked PARTIAL until real fixtures pass.
+---
 
-## Notes
+## Pendências antes de release público
 
-- The existing local ISO boots in QEMU smoke mode, but it is stale relative to this branch and fails current artifact validation because new hardening verifier/service files are absent.
-- The Bitcoin Core roundtrip used regtest only and did not touch real funds.
-- The project remains unaudited externally and must not be called v1.0.
+1. Produzir fixtures reais de Sparrow, Electrum e BlueWallet em regtest ou signet e registrar resultado em `PSBT_COMPATIBILITY.md`.
+2. Configurar chave de release GPG e gerar `SHA256SUMS.asc` antes de publicar artefatos.
+3. Realizar gravação física de USB com confirmação explícita do operador e verificar checksum pós-gravação.
+4. Conduzir auditoria externa independente antes de declarar suporte a valores significativos.
+
+---
+
+## Notas
+
+- A suite de testes cobre 188+ casos, incluindo 12 testes de flags de janela (`test_window_flags.py`) adicionados neste branch.
+- Os patches embit v0.8.0 estão aplicados no build ISO; o CRÍTICO fee drain (psbt/core.py:62) e os 9 ALTOS (PRNG inseguro, malleable signatures, entre outros) foram corrigidos.
+- A ISO `phantos-coldwallet-1.0.0-amd64.iso` foi construída e validada neste branch.
+- Builds não são bit-a-bit reprodutíveis; tratar como candidato de validação até assinatura e checklist completos.
+- O roundtrip Bitcoin Core usou apenas fundos regtest — não foram tocados fundos reais.
+- A limitação de zeroização de memória Python permanece documentada e conhecida; não é bloqueante para v1.0.0.

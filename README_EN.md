@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-F7931A?logo=bitcoin&logoColor=white)](https://bitcoin.org)
-[![Tests: 176 passing](https://img.shields.io/badge/Tests-176%20passing-brightgreen.svg)](tests/)
+[![Tests: 188 passing](https://img.shields.io/badge/Tests-188%20passing-brightgreen.svg)](tests/)
 [![Status: v1.0.0](https://img.shields.io/badge/Status-v1.0.0%20stable-green.svg)](CHANGELOG.md)
 
 ---
@@ -57,7 +57,7 @@ PhantOS ColdWallet is an offline Bitcoin cold wallet that runs directly from a b
 - **Bilingual** — Portuguese (pt_BR) and English (en_US) switchable at runtime
 - **Network hardening** — Wi-Fi and Bluetooth disabled, `nftables` drop-all
 - **Bootable USB drive** — Debian Bookworm live, openbox kiosk, autologin
-- **176 automated tests** — ruff, mypy and pytest in local validation and CI, 0 warnings
+- **188 automated tests** — ruff, mypy and pytest in local validation and CI, 0 warnings
 
 ---
 
@@ -108,7 +108,7 @@ app/
   psbt/          — PSBT parse, review and signing
   qr/            — QR generation and reading (qrcode, zxing-cpp)
   security/      — offline status, mlock, safe_event
-  ui/            — PySide6 interface (dark Bitcoin theme)
+  ui/            — PySide6 interface (dark Bitcoin theme); dialogs.py — centralized frameless wrappers
   ur/            — UR encoding crypto-psbt (Foundation Devices)
   wallet/        — BIP39/BIP32 core
 assets/
@@ -118,7 +118,7 @@ assets/
 docs/            — tutorials, integration guides, threat model
 scripts/         — build_iso.sh · write_usb.sh · harden_network.sh
 patches/         — embit-0.8.0-phantos-security.patch (40+ fixes)
-tests/           — 176 automated tests (0 warnings)
+tests/           — 188 automated tests (0 warnings)
 ```
 
 ---
@@ -229,7 +229,7 @@ The project runs the following checks on every push and pull request:
 | --- | --- | --- |
 | Lint | ruff | Python formatting and static analysis |
 | Types | mypy | Static type checking |
-| Tests | pytest 3.11/3.12 | 176 tests in Python matrix |
+| Tests | pytest 3.11/3.12 | 188 tests in Python matrix |
 | Shell | ShellCheck | Shell script static analysis |
 | SAST | Bandit | Python security analysis |
 | Deps | pip-audit | Dependency audit |

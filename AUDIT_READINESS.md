@@ -1,6 +1,6 @@
 # Audit Readiness
 
-Status: beta preparado para revisão técnica. Este documento não declara auditoria concluída.
+Status: v1.0.0 lançada — preparada para revisão técnica externa. Este documento não declara auditoria concluída.
 
 ## Escopo Sugerido
 
@@ -90,12 +90,12 @@ Dentro do live system:
 sudo /usr/local/bin/phantos-verify-live-hardening
 ```
 
-## Pendências Antes de v1.0
+## Itens Abertos Pós-v1.0.0
 
-- Fixtures reais em regtest/signet para Sparrow, Electrum e BlueWallet.
+- Fixtures reais em regtest/signet para Sparrow, Electrum e BlueWallet (validação cruzada manual).
 - Verificação manual documentada de import/export com cada carteira.
-- Release assinado com chave pública publicada.
+- Release assinado com chave pública publicada e verificável.
 - SBOM anexado a cada release.
-- Teste de boot BIOS/UEFI em QEMU no mesmo artefato do release e hardware real.
-- Validação física de pendrive com dispositivo autorizado.
-- Revisão externa independente do core de carteira e assinatura.
+- Teste de boot BIOS/UEFI em QEMU no mesmo artefato do release e em hardware real.
+- Validação física de pendrive com dispositivo autorizado e documentação do resultado.
+- Revisão externa independente do core de carteira e assinatura (sem data comprometida).

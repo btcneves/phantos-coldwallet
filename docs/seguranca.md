@@ -17,14 +17,26 @@ Use `scripts/verify_offline.sh` para confirmar que o dispositivo está offline a
 
 A assinatura de PSBTs é bloqueada pela aplicação se o isolamento de rede não for verificado.
 
+## Isolamento de janela (UI)
+
+Todas as janelas e diálogos do PhantOS — incluindo `MainWindow`, `QRDisplayDialog`,
+`AnimatedQRDialog`, `CameraDialog` e todos os wrappers em `app/ui/dialogs.py` —
+aplicam `Qt.WindowType.FramelessWindowHint`. Isso remove a barra de título,
+os botões de minimizar e maximizar e impede decoração pelo gerenciador de janelas.
+
+O openbox é configurado com `<decor>no</decor>` globalmente, reforçando o isolamento.
+
+Esta medida evita que o ambiente kiosk exponha controles de janela que poderiam
+ser operados por outros processos ou por acidente em um ambiente de uso único.
+
 ## Limpeza de dados sensíveis na UI
 
 - A seed (mnemônica BIP39) é exibida na tela apenas durante o processo de criação ou restauração.
 - A passphrase é limpa automaticamente após o carregamento do contexto da carteira.
 - No fluxo de restauração, a seed também é limpa automaticamente após uso.
 - No fluxo de criação, a seed permanece visível para que o usuário possa verificar a cópia em papel.
-  Após verificar, use o botão **🔒 Bloquear** para limpar todos os dados da tela.
-- O botão **🔒 Bloquear** zera o contexto da carteira, limpa todos os campos e o painel de saída.
+  Após verificar, use o botão **Bloquear** para limpar todos os dados da tela.
+- O botão **Bloquear** zera o contexto da carteira, limpa todos os campos e o painel de saída.
 - A aplicação **não usa o clipboard** para seeds, passphrases ou chaves privadas.
 
 ## Limitação conhecida — zeroização de memória em Python
@@ -52,9 +64,20 @@ collector coletar os objetos ou até o processo terminar.
 Esta limitação permanece documentada até que a estratégia de memória seja revisada e
 auditada externamente.
 
+## Hardening no processo da aplicação
+
+Aplicado em `app/main.py` na inicialização do processo, antes de qualquer janela:
+
+- **`PR_SET_DUMPABLE = 0`** via `prctl` — desabilita core dumps do processo e
+  impede acesso a `/proc/PID/mem` por outros processos (mesmo root, em kernels
+  com Yama LSM ativado). Complementa as proteções de SO descritas abaixo.
+- **`QT_ACCESSIBILITY=0`** e **`NO_AT_BRIDGE=1`** — desabilita AT-SPI, impedindo
+  que processos externos leiam conteúdo de campos de seed words via D-Bus de
+  acessibilidade.
+
 ## Hardening de memória do sistema operacional
 
-O hook de instalação (`scripts/build_iso.sh`) aplica as seguintes proteções no sistema live:
+O script `scripts/build_iso.sh` aplica as seguintes proteções no sistema live:
 
 ### Swap desativado
 

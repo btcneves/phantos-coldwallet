@@ -2,9 +2,9 @@
 
 ## Auditoria e versão
 
-- **Sem auditoria externa concluída.** O código de desenvolvimento 0.2.0 completou o ciclo P0 de endurecimento
-  interno. A v1.0.0 só será declarada estável após auditoria independente publicada.
-  Veja [AUDIT_READINESS.md](AUDIT_READINESS.md) para o escopo preparado.
+- **Sem auditoria externa concluída.** A v1.0.0 foi lançada após ciclo interno de endurecimento e cobertura
+  de testes, mas sem revisão de segurança independente publicada. Não deve ser usada para custodiar valores
+  altos sem revisão externa realizada. Veja [AUDIT_READINESS.md](AUDIT_READINESS.md) para o escopo preparado.
 
 ## Diferença em relação a hardware wallets
 
@@ -34,7 +34,7 @@ não a capacidade de uso.
 
 - Build da ISO exige root e `live-build`; não é bit-a-bit reprodutível (item P1).
 - Assinatura GPG/minisign do release depende de chave de mantenedor configurada.
-- A UI é majoritariamente PT-BR; EN-US completo está no roadmap.
+- A UI suporta PT-BR e EN-US; traduções adicionais não estão planejadas para v1.x.
 
 ## Multisig
 

@@ -12,7 +12,7 @@ Use o gravador protegido:
 
 ```bash
 sudo PHANTOS_CONFIRM_WIPE="CONFIRMO APAGAR ESTE DISPOSITIVO" \
-  bash scripts/write_usb.sh phantos-coldwallet-0.x.y-amd64.iso /dev/sdX
+  bash scripts/write_usb.sh phantos-coldwallet-<versão>-amd64.iso /dev/sdX
 ```
 
 Use `/dev/sdX`, não `/dev/sdX1`.

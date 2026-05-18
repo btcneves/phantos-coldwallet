@@ -1,6 +1,6 @@
 # Release Process
 
-Este projeto ainda está em beta. Releases devem ser manuais, revisadas e sem publicação automática.
+Releases devem ser manuais, revisadas e sem publicação automática.
 
 ## Antes de Criar Release
 
@@ -35,8 +35,8 @@ gitleaks detect --no-git --redact
 Use tag assinada:
 
 ```bash
-git tag -s v0.x.y -m "PhantOS ColdWallet v0.x.y"
-git tag -v v0.x.y
+git tag -s v<versão> -m "PhantOS ColdWallet v<versão>"
+git tag -v v<versão>
 ```
 
 ## Artefatos
@@ -44,9 +44,9 @@ git tag -v v0.x.y
 Gerar artefatos de release da ISO validada:
 
 ```bash
-bash scripts/validate_iso_artifact.sh phantos-coldwallet-0.x.y-amd64.iso
-bash scripts/test_iso_qemu.sh phantos-coldwallet-0.x.y-amd64.iso
-bash scripts/release_artifacts.sh phantos-coldwallet-0.x.y-amd64.iso
+bash scripts/validate_iso_artifact.sh phantos-coldwallet-<versão>-amd64.iso
+bash scripts/test_iso_qemu.sh phantos-coldwallet-<versão>-amd64.iso
+bash scripts/release_artifacts.sh phantos-coldwallet-<versão>-amd64.iso
 ```
 
 O script cria:

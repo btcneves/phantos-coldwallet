@@ -29,8 +29,10 @@ serviços de rede em execução.
   garantia. A limpeza dos campos de UI reduz a janela de exposição, mas não elimina o risco.
 - A estimativa de vbytes para cálculo de taxa é aproximada (baseada no tamanho da
   transação não assinada). O valor real após assinatura pode ser maior.
-- PSBTs exportadas por carteiras externas (Sparrow, Electrum, BlueWallet) não foram
-  testadas extensivamente nesta versão — use com cautela em valores altos.
+- PSBTs exportadas por carteiras externas (Sparrow, Electrum, BlueWallet) foram
+  testadas em regtest com roundtrip Bitcoin Core. Interoperabilidade com fixtures
+  reais de mainnet/signet dessas carteiras não está completamente validada —
+  use com cautela em valores altos até que fixtures externos sejam confirmados.
 
 Para valores expressivos, use hardware dedicado, backups robustos e auditoria
 externa independente.

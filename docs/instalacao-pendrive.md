@@ -1,9 +1,12 @@
 # Gravando no Pendrive — PhantOS ColdWallet
 
-Tutorial para gravar a ISO do PhantOS ColdWallet em um pendrive USB e inicializar o sistema.
+Guia de referência rápida para gravar a ISO do PhantOS ColdWallet em um pendrive USB e inicializar o sistema.
 
-> **Pré-requisito:** gere ou baixe a ISO antes de seguir este guia.
-> Consulte [Build da ISO](build-iso.md) para gerar localmente.
+> **Pré-requisito:** obtenha a ISO antes de prosseguir — baixe o release oficial na
+> [página de releases](https://github.com/btcneves/phantos-coldwallet/releases)
+> ou gere localmente conforme o guia em [build-iso.md](build-iso.md).
+> Para um tutorial completo cobrindo todo o fluxo (build → gravação → boot → uso), consulte
+> [Guia Completo ISO + Pendrive](guia-iso-pendrive-completo.md).
 
 ---
 
@@ -108,7 +111,16 @@ Disponível para macOS em [etcher.balena.io](https://etcher.balena.io). Siga os 
 sha256sum phantos-coldwallet-<versao>-amd64.iso
 ```
 
-Compare o resultado com o hash publicado na [página de releases](https://github.com/btcneves/phantos-coldwallet/releases) quando estiver usando uma ISO baixada. Para ISO gerada localmente, registre o hash junto do commit usado.
+Compare o resultado com o hash publicado na [página de releases](https://github.com/btcneves/phantos-coldwallet/releases).
+
+Para a v1.0.0, os hashes esperados são:
+
+```text
+SHA256: 58b3abf4a772f4311e34d028fc45f43bb713923d88cbe5224caa35c7bd0b7040
+SHA512: 406f5c13557381a2220192802ee18709bebc2f9c43a5689b074e7c4189d3dd2694afd2f9fa21578d4cf1285b4e8c2f1e65efe15db58b54b04fb111309d48f9b4
+```
+
+Para ISO gerada localmente, registre o hash junto do commit utilizado.
 
 ---
 
@@ -155,4 +167,4 @@ Após selecionar o pendrive, o sistema inicializa automaticamente:
 
 ## Próximo passo
 
-Com o sistema rodando, consulte o [Guia Completo ISO + Pendrive](guia-iso-pendrive-completo.md) para instruções de uso inicial da cold wallet.
+Com o sistema rodando, consulte o [Guia do Usuário Iniciante](guia-usuario-leigo.md) para criar ou restaurar sua primeira carteira.

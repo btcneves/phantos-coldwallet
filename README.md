@@ -7,7 +7,7 @@
 [![Licença: MIT](https://img.shields.io/badge/Licença-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-F7931A?logo=bitcoin&logoColor=white)](https://bitcoin.org)
-[![Testes: 176 passando](https://img.shields.io/badge/Testes-176%20passando-brightgreen.svg)](tests/)
+[![Testes: 188 passando](https://img.shields.io/badge/Testes-188%20passando-brightgreen.svg)](tests/)
 [![Status: v1.0.0](https://img.shields.io/badge/Status-v1.0.0%20estável-green.svg)](CHANGELOG.md)
 
 ---
@@ -57,7 +57,7 @@ PhantOS ColdWallet é uma carteira fria Bitcoin para uso offline, executada dire
 - **Bilinguismo** — Português (pt_BR) e Inglês (en_US) alternaveis em tempo real
 - **Hardening de rede** — Wi-Fi e Bluetooth desabilitados, `nftables` drop-all
 - **Bootável via pendrive** — live Debian Bookworm, openbox kiosk, autologin
-- **176 testes automatizados** — ruff, mypy e pytest na validação local e no CI, 0 warnings
+- **188 testes automatizados** — ruff, mypy e pytest na validação local e no CI, 0 warnings
 
 ---
 
@@ -108,7 +108,7 @@ app/
   psbt/          — parse, revisão e assinatura de PSBT
   qr/            — geração e leitura de QR (qrcode, zxing-cpp)
   security/      — status offline, mlock, safe_event
-  ui/            — interface PySide6 (dark Bitcoin theme)
+  ui/            — interface PySide6 (dark Bitcoin theme); dialogs.py — wrappers frameless centralizados
   ur/            — UR encoding crypto-psbt (Foundation Devices)
   wallet/        — núcleo BIP39/BIP32
 assets/
@@ -118,7 +118,7 @@ assets/
 docs/            — tutoriais, guias de integração, threat model
 scripts/         — build_iso.sh · write_usb.sh · harden_network.sh
 patches/         — embit-0.8.0-phantos-security.patch (40+ fixes)
-tests/           — 176 testes automatizados (0 warnings)
+tests/           — 188 testes automatizados (0 warnings)
 ```
 
 ---
@@ -229,7 +229,7 @@ O projeto executa as seguintes verificações em cada push e pull request:
 | --- | --- | --- |
 | Lint | ruff | Formatação e análise estática Python |
 | Tipos | mypy | Verificação de tipos estáticos |
-| Testes | pytest 3.11/3.12 | 176 testes em matriz Python |
+| Testes | pytest 3.11/3.12 | 188 testes em matriz Python |
 | Shell | ShellCheck | Análise estática de scripts shell |
 | SAST | Bandit | Análise de segurança Python |
 | Deps | pip-audit | Auditoria de dependências |

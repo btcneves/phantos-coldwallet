@@ -41,8 +41,8 @@ Confirme a fingerprint da chave por um canal independente antes de confiar no ar
 
 ```bash
 git fetch --tags origin
-git tag -v v0.x.y
-git checkout v0.x.y
+git tag -v v1.0.0
+git checkout v1.0.0
 ```
 
 Se a tag não for assinada ou se a assinatura não for verificável, trate o release como artefato de desenvolvimento.
@@ -55,7 +55,7 @@ Prefira o script protegido:
 
 ```bash
 sudo PHANTOS_CONFIRM_WIPE="CONFIRMO APAGAR ESTE DISPOSITIVO" \
-  bash scripts/write_usb.sh phantos-coldwallet-0.x.y-amd64.iso /dev/sdX
+  bash scripts/write_usb.sh phantos-coldwallet-1.0.0-amd64.iso /dev/sdX
 ```
 
 Remova e reconecte o pendrive após a gravação.
