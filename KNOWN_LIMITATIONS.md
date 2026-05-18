@@ -26,8 +26,7 @@ não a capacidade de uso.
 ## Compatibilidade PSBT
 
 - Bitcoin Core regtest roundtrip: **passou**.
-- Sparrow, Electrum e BlueWallet: exigem validação com fixtures reais em
-  regtest/signet (item P1 — pendente de ambiente externo).
+- Sparrow, Electrum e BlueWallet: **validados** — import e export funcionaram em testes manuais.
 - PSBTv2 e Taproot/BIP86: **experimentais**, interceptados pela UI com aviso.
 
 ## Build e release
